@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Production-grade NBA prediction system trained on 26 seasons (2000-2026) of Basketball Reference data. 4 XGBoost models, 200 features, strict temporal anti-leakage, FastMCP agent interface.
+NBA prediction system trained on 26 seasons (2000-2026) of Basketball Reference data. 4 XGBoost models, 200 features, strict temporal anti-leakage, FastMCP agent interface.
 
 ## Tech Stack
 
@@ -74,7 +74,7 @@ nba-ref/
 │   ├── test_metrics.py      # Evaluation metric tests
 │   └── test_baselines.py    # Baseline model tests
 ├── outputs/
-│   ├── models/              # Production .joblib artifacts
+│   ├── models/              # Trained .joblib artifacts
 │   ├── predictions/         # Sample prediction CSVs (6 files)
 │   └── reports/             # Evaluation markdown reports
 └── notebooks/               # EDA + analysis notebooks (4 notebooks)
@@ -137,8 +137,8 @@ Inspired by Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) 
 **Key rules:**
 - `autoresearch/experiment.py` is the ONLY editable file
 - `autoresearch/evaluate.py` and `autoresearch/constants.py` are sacred
-- All production code in `nba_predict/` is sacred — never modified by the agent
-- Experiment models save to `autoresearch/outputs/models/` (isolated from production)
+- All core code in `nba_predict/` is sacred — never modified by the agent
+- Experiment models save to `autoresearch/outputs/models/` (isolated from core)
 - Results logged to `autoresearch/results.tsv`
 - Agent follows instructions in `autoresearch/program.md`
 
