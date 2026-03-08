@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+*.pyo
+*.joblib
+.env
+.env.*
+.claude/settings.local.json
+data/*.csv
+autoresearch/outputs/
+outputs/models/
+outputs/optuna_results.json
+*.egg-info/
+dist/
+build/
+.ipynb_checkpoints/

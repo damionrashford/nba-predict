@@ -1,0 +1,13 @@
+default_model: "sonnet"
+
+anthropic:
+  api_key: "${ANTHROPIC_API_KEY}"
+
+mcp:
+  servers:
+    nba_data:
+      command: "python"
+      args: ["mcp/nba_mcp.py"]
+    nba_predict:
+      command: "python"
+      args: ["mcp/predict_mcp.py"]
