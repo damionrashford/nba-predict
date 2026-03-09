@@ -1,0 +1,1231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NBA Predict — Machine Learning Game & Player Predictions</title>
+  <meta name="description" content="Predict NBA game winners, point spreads, player stats, MVP races, and season win totals using XGBoost trained on 26 seasons of data.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0f;
+      --bg-card: #12121a;
+      --bg-card-hover: #1a1a26;
+      --bg-input: #0e0e16;
+      --border: #1e1e2e;
+      --border-hover: #2a2a3e;
+      --text: #e4e4ef;
+      --text-secondary: #8888a0;
+      --text-muted: #55556a;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.15);
+      --green: #22c55e;
+      --green-dim: rgba(34, 197, 94, 0.12);
+      --red: #ef4444;
+      --red-dim: rgba(239, 68, 68, 0.12);
+      --yellow: #eab308;
+      --yellow-dim: rgba(234, 179, 8, 0.12);
+      --radius: 12px;
+      --radius-sm: 8px;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+      --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.25);
+      --shadow-lg: 0 4px 12px rgba(0,0,0,0.5), 0 16px 48px rgba(0,0,0,0.35);
+      --transition: 150ms ease;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    /* ---- NAV ---- */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(16px) saturate(1.4);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-brand {
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .nav-brand span { color: var(--accent); }
+    .nav-links {
+      display: flex;
+      gap: 4px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: color var(--transition), background var(--transition);
+    }
+    .nav-links a:hover {
+      color: var(--text);
+      background: var(--bg-card);
+    }
+    .nav-gh {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: all var(--transition);
+    }
+    .nav-gh:hover {
+      color: var(--text);
+      border-color: var(--border-hover);
+      background: var(--bg-card);
+    }
+
+    /* ---- LAYOUT ---- */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    section { padding: 64px 0; }
+    section + section { border-top: 1px solid var(--border); }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    .section-desc {
+      color: var(--text-secondary);
+      font-size: 15px;
+      max-width: 600px;
+      margin-bottom: 32px;
+    }
+
+    /* ---- HERO ---- */
+    .hero {
+      padding: 80px 0 64px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -120px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-title {
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 800;
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .hero-sub {
+      font-size: 17px;
+      color: var(--text-secondary);
+      max-width: 640px;
+      margin: 0 auto 40px;
+      line-height: 1.7;
+    }
+
+    /* ---- METRIC CARDS ---- */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      text-align: center;
+      transition: border-color var(--transition), transform var(--transition);
+    }
+    .metric-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+    }
+    .metric-value {
+      font-size: 28px;
+      font-weight: 800;
+      font-family: var(--mono);
+      letter-spacing: -1px;
+    }
+    .metric-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+    .metric-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 8px;
+    }
+    .badge-green { background: var(--green-dim); color: var(--green); }
+    .badge-yellow { background: var(--yellow-dim); color: var(--yellow); }
+
+    /* ---- MODEL CARDS ---- */
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .model-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .model-card:hover {
+      border-color: var(--border-hover);
+      box-shadow: var(--shadow);
+    }
+    .model-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .model-card .model-type {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+    .model-stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .model-stat-label { color: var(--text-secondary); }
+    .model-stat-value { font-weight: 600; font-family: var(--mono); font-size: 14px; }
+    .model-algo {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-family: var(--mono);
+      background: var(--bg);
+      padding: 6px 10px;
+      border-radius: 6px;
+    }
+
+    /* ---- FEATURE IMPORTANCE ---- */
+    .feature-bar-list { list-style: none; }
+    .feature-bar-item {
+      display: grid;
+      grid-template-columns: 24px 1fr 200px 60px;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .feature-bar-item:last-child { border-bottom: none; }
+    .feature-rank {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .feature-name {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .feature-bar-track {
+      height: 6px;
+      background: var(--bg);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .feature-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      transition: width 600ms ease;
+    }
+    .feature-importance {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-align: right;
+    }
+
+    /* ---- TABS ---- */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 16px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color var(--transition), border-color var(--transition);
+    }
+    .tab-btn:hover { color: var(--text-secondary); }
+    .tab-btn.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ---- TABLE ---- */
+    .table-wrapper {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    thead {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    th {
+      background: var(--bg);
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      padding: 12px 16px;
+      text-align: left;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      transition: color var(--transition);
+    }
+    th:hover { color: var(--text); }
+    th .sort-icon { font-size: 10px; margin-left: 4px; opacity: 0.4; }
+    th.sorted .sort-icon { opacity: 1; color: var(--accent); }
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      font-family: var(--mono);
+      font-size: 12.5px;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.015); }
+    td.text-cell { font-family: var(--font); font-weight: 500; }
+    td.correct-true { color: var(--green); }
+    td.correct-false { color: var(--red); }
+    .table-count {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 12px;
+      text-align: right;
+    }
+
+    /* ---- SEARCH / FILTERS ---- */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .filter-input {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      padding: 8px 14px;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      min-width: 200px;
+    }
+    .filter-input::placeholder { color: var(--text-muted); }
+    .filter-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    select.filter-input {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2388889f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+
+    /* ---- EXPERIMENT LOG ---- */
+    .exp-timeline { position: relative; padding-left: 24px; }
+    .exp-timeline::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      background: var(--border);
+    }
+    .exp-item {
+      position: relative;
+      padding: 12px 0 12px 20px;
+    }
+    .exp-item::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 18px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+      border: 2px solid var(--bg);
+    }
+    .exp-item:last-child::before { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+    .exp-name { font-weight: 600; font-size: 14px; }
+    .exp-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-family: var(--mono);
+      margin-top: 2px;
+    }
+    .exp-change { color: var(--green); }
+
+    /* ---- ANTI-LEAK ---- */
+    .leak-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+    }
+    .leak-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .leak-card h4 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .leak-card p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .leak-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    /* ---- TECH PILLS ---- */
+    .tech-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tech-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: border-color var(--transition);
+    }
+    .tech-pill:hover { border-color: var(--border-hover); }
+
+    /* ---- FOOTER ---- */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    footer a { color: var(--text-secondary); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+
+    /* ---- RESPONSIVE ---- */
+    @media (max-width: 768px) {
+      .hero { padding: 48px 0 40px; }
+      section { padding: 40px 0; }
+      .metric-grid { grid-template-columns: repeat(2, 1fr); }
+      .model-grid { grid-template-columns: 1fr; }
+      .feature-bar-item { grid-template-columns: 24px 1fr 100px 50px; }
+      .nav-links { display: none; }
+      .filters { flex-direction: column; }
+      .filter-input { min-width: unset; width: 100%; }
+    }
+    @media (max-width: 480px) {
+      .metric-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .metric-card { padding: 14px; }
+      .metric-value { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#" class="nav-brand">NBA<span>Predict</span></a>
+    <ul class="nav-links">
+      <li><a href="#results">Results</a></li>
+      <li><a href="#models">Models</a></li>
+      <li><a href="#predictions">Predictions</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#experiments">Experiments</a></li>
+    </ul>
+    <a href="https://github.com/damionrashford/nba-predict" target="_blank" rel="noopener" class="nav-gh">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      Source
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="container">
+    <h1 class="hero-title">NBA Game & Player<br>Predictions</h1>
+    <p class="hero-sub">XGBoost models trained on 26 seasons of Basketball Reference data. 200 engineered features, strict anti-leakage, and an autonomous experiment loop.</p>
+
+    <div class="metric-grid" style="max-width: 900px; margin: 0 auto;">
+      <div class="metric-card">
+        <div class="metric-value">66.1%</div>
+        <div class="metric-label">Game Winner Accuracy</div>
+        <div class="metric-badge badge-green">+11.7pp vs baseline</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">0.719</div>
+        <div class="metric-label">AUC-ROC</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">10.94</div>
+        <div class="metric-label">Point Spread MAE</div>
+        <div class="metric-badge badge-green">+12.9% better</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">0.911</div>
+        <div class="metric-label">MVP Spearman</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">0.2380</div>
+        <div class="metric-label">NBA_CORE Composite</div>
+        <div class="metric-badge badge-yellow">33 experiments</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section id="results">
+  <div class="container">
+    <div class="section-label">Evaluation</div>
+    <h2 class="section-title">Test Set Results</h2>
+    <p class="section-desc">All metrics evaluated on held-out 2024-2025 seasons, never seen during training or tuning.</p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Metric</th>
+            <th>Score</th>
+            <th>Baseline</th>
+            <th>Improvement</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="text-cell">Game Winner</td><td class="text-cell">Accuracy</td><td>66.1%</td><td>54.4%</td><td class="correct-true">+11.7 pp</td></tr>
+          <tr><td class="text-cell">Game Winner</td><td class="text-cell">AUC-ROC</td><td>0.719</td><td>-</td><td>-</td></tr>
+          <tr><td class="text-cell">Point Spread</td><td class="text-cell">MAE</td><td>10.94 pts</td><td>12.56 pts</td><td class="correct-true">+12.9%</td></tr>
+          <tr><td class="text-cell">Player PTS</td><td class="text-cell">MAE</td><td>2.25</td><td>2.48</td><td class="correct-true">+9.3%</td></tr>
+          <tr><td class="text-cell">Player AST</td><td class="text-cell">MAE</td><td>0.66</td><td>0.73</td><td class="correct-true">+9.6%</td></tr>
+          <tr><td class="text-cell">Player REB</td><td class="text-cell">MAE</td><td>0.77</td><td>0.80</td><td class="correct-true">+3.8%</td></tr>
+          <tr><td class="text-cell">Win Totals</td><td class="text-cell">MAE</td><td>8.61 wins</td><td>8.80 wins</td><td class="correct-true">+2.2%</td></tr>
+          <tr><td class="text-cell">MVP Race</td><td class="text-cell">Spearman</td><td>0.911</td><td>-</td><td>-</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- MODELS -->
+<section id="models">
+  <div class="container">
+    <div class="section-label">Architecture</div>
+    <h2 class="section-title">4 Models</h2>
+    <p class="section-desc">Each model targets a different prediction task with its own feature set and algorithm.</p>
+
+    <div class="model-grid">
+      <div class="model-card">
+        <h3>Game Winner</h3>
+        <div class="model-type">Binary Classification</div>
+        <div class="model-stat"><span class="model-stat-label">Accuracy</span><span class="model-stat-value">66.1%</span></div>
+        <div class="model-stat"><span class="model-stat-label">AUC-ROC</span><span class="model-stat-value">0.719</span></div>
+        <div class="model-stat"><span class="model-stat-label">Test Samples</span><span class="model-stat-value">2,472</span></div>
+        <div class="model-stat"><span class="model-stat-label">Top Feature</span><span class="model-stat-value" style="font-size:11px">diff_win_pct_season</span></div>
+        <div class="model-algo">XGBClassifier &middot; 200 features</div>
+      </div>
+
+      <div class="model-card">
+        <h3>Point Spread</h3>
+        <div class="model-type">Regression</div>
+        <div class="model-stat"><span class="model-stat-label">MAE</span><span class="model-stat-value">10.94 pts</span></div>
+        <div class="model-stat"><span class="model-stat-label">RMSE</span><span class="model-stat-value">14.14 pts</span></div>
+        <div class="model-stat"><span class="model-stat-label">Derived Acc</span><span class="model-stat-value">66.4%</span></div>
+        <div class="model-stat"><span class="model-stat-label">Loss</span><span class="model-stat-value" style="font-size:12px">Huber</span></div>
+        <div class="model-algo">XGB + Ridge blend (65/35)</div>
+      </div>
+
+      <div class="model-card">
+        <h3>Player Performance</h3>
+        <div class="model-type">Multi-target Regression</div>
+        <div class="model-stat"><span class="model-stat-label">PTS MAE</span><span class="model-stat-value">2.25</span></div>
+        <div class="model-stat"><span class="model-stat-label">AST MAE</span><span class="model-stat-value">0.66</span></div>
+        <div class="model-stat"><span class="model-stat-label">REB MAE</span><span class="model-stat-value">0.77</span></div>
+        <div class="model-stat"><span class="model-stat-label">Players</span><span class="model-stat-value">729</span></div>
+        <div class="model-algo">3x XGBRegressor &middot; per-target features</div>
+      </div>
+
+      <div class="model-card">
+        <h3>Season Outcomes</h3>
+        <div class="model-type">Win Totals + MVP</div>
+        <div class="model-stat"><span class="model-stat-label">Wins MAE</span><span class="model-stat-value">8.61</span></div>
+        <div class="model-stat"><span class="model-stat-label">MVP Spearman</span><span class="model-stat-value">0.911</span></div>
+        <div class="model-stat"><span class="model-stat-label">MVP MAE</span><span class="model-stat-value">0.011</span></div>
+        <div class="model-stat"><span class="model-stat-label">Shrinkage</span><span class="model-stat-value">s=0.33</span></div>
+        <div class="model-algo">Shrinkage + XGB-Ridge blend</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PREDICTIONS EXPLORER -->
+<section id="predictions">
+  <div class="container">
+    <div class="section-label">Explorer</div>
+    <h2 class="section-title">Browse Predictions</h2>
+    <p class="section-desc">Interactive tables of all model predictions on the test set. Filter, search, and sort.</p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab-btn active" data-tab="tab-games" role="tab">Game Winners</button>
+      <button class="tab-btn" data-tab="tab-spreads" role="tab">Point Spreads</button>
+      <button class="tab-btn" data-tab="tab-players" role="tab">Player Stats</button>
+      <button class="tab-btn" data-tab="tab-wins" role="tab">Win Totals</button>
+      <button class="tab-btn" data-tab="tab-champs" role="tab">Championship Odds</button>
+      <button class="tab-btn" data-tab="tab-mvp" role="tab">MVP Race</button>
+    </div>
+
+    <!-- GAME WINNERS -->
+    <div class="tab-panel active" id="tab-games">
+      <div class="filters">
+        <input type="text" class="filter-input" id="games-search" placeholder="Search team (e.g. LAL, BOS)...">
+        <select class="filter-input" id="games-season">
+          <option value="">All Seasons</option>
+          <option value="2024">2023-24</option>
+          <option value="2025">2024-25</option>
+        </select>
+        <select class="filter-input" id="games-correct">
+          <option value="">All Results</option>
+          <option value="True">Correct</option>
+          <option value="False">Incorrect</option>
+        </select>
+      </div>
+      <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
+        <table id="games-table">
+          <thead>
+            <tr>
+              <th data-sort="date">Date <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="team_home">Home <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="team_away">Away <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="home_win_prob">Win Prob <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="predicted_winner">Pick <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="correct">Correct <span class="sort-icon">&#9650;</span></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="table-count" id="games-count"></div>
+    </div>
+
+    <!-- POINT SPREADS -->
+    <div class="tab-panel" id="tab-spreads">
+      <div class="filters">
+        <input type="text" class="filter-input" id="spreads-search" placeholder="Search team...">
+        <select class="filter-input" id="spreads-season">
+          <option value="">All Seasons</option>
+          <option value="2024">2023-24</option>
+          <option value="2025">2024-25</option>
+        </select>
+      </div>
+      <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
+        <table id="spreads-table">
+          <thead>
+            <tr>
+              <th data-sort="date">Date <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="team_home">Home <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="team_away">Away <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="pred_spread">Pred Spread <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="margin">Actual Margin <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="error">Error <span class="sort-icon">&#9650;</span></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="table-count" id="spreads-count"></div>
+    </div>
+
+    <!-- PLAYERS -->
+    <div class="tab-panel" id="tab-players">
+      <div class="filters">
+        <input type="text" class="filter-input" id="players-search" placeholder="Search player or team...">
+      </div>
+      <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
+        <table id="players-table">
+          <thead>
+            <tr>
+              <th data-sort="player">Player <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="team">Team <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="age">Age <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="pts_per_g">Actual PTS <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="pred_pts">Pred PTS <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="ast_per_g">Actual AST <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="pred_ast">Pred AST <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="trb_per_g">Actual REB <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="pred_reb">Pred REB <span class="sort-icon">&#9650;</span></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="table-count" id="players-count"></div>
+    </div>
+
+    <!-- WIN TOTALS -->
+    <div class="tab-panel" id="tab-wins">
+      <div class="filters">
+        <input type="text" class="filter-input" id="wins-search" placeholder="Search team...">
+        <select class="filter-input" id="wins-season">
+          <option value="">All Seasons</option>
+          <option value="2024">2023-24</option>
+          <option value="2025">2024-25</option>
+        </select>
+      </div>
+      <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
+        <table id="wins-table">
+          <thead>
+            <tr>
+              <th data-sort="team">Team <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="season">Season <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="actual_wins">Actual Wins <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="pred_wins">Pred Wins <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="error">Error <span class="sort-icon">&#9650;</span></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="table-count" id="wins-count"></div>
+    </div>
+
+    <!-- CHAMPIONSHIP ODDS -->
+    <div class="tab-panel" id="tab-champs">
+      <div class="filters">
+        <input type="text" class="filter-input" id="champs-search" placeholder="Search team...">
+        <select class="filter-input" id="champs-season">
+          <option value="">All Seasons</option>
+          <option value="2024">2023-24</option>
+          <option value="2025">2024-25</option>
+        </select>
+      </div>
+      <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
+        <table id="champs-table">
+          <thead>
+            <tr>
+              <th data-sort="championship_rank">Rank <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="team">Team <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="season">Season <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="pred_wins">Pred Wins <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="championship_prob">Champ Prob <span class="sort-icon">&#9650;</span></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="table-count" id="champs-count"></div>
+    </div>
+
+    <!-- MVP RACE -->
+    <div class="tab-panel" id="tab-mvp">
+      <div class="filters">
+        <input type="text" class="filter-input" id="mvp-search" placeholder="Search player or team...">
+        <select class="filter-input" id="mvp-season">
+          <option value="">All Seasons</option>
+          <option value="2024">2023-24</option>
+          <option value="2025">2024-25</option>
+        </select>
+      </div>
+      <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
+        <table id="mvp-table">
+          <thead>
+            <tr>
+              <th data-sort="player">Player <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="team">Team <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="season">Season <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="pts_per_g">PPG <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="per">PER <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="bpm">BPM <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="actual_award_share">Actual Share <span class="sort-icon">&#9650;</span></th>
+              <th data-sort="pred_award_share">Pred Share <span class="sort-icon">&#9650;</span></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="table-count" id="mvp-count"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE IMPORTANCE -->
+<section id="features">
+  <div class="container">
+    <div class="section-label">Feature Engineering</div>
+    <h2 class="section-title">Top Predictors</h2>
+    <p class="section-desc">Top 10 features by importance for the game winner model. Differential features dominate.</p>
+
+    <div style="max-width: 700px;">
+      <ul class="feature-bar-list" id="feature-bars"></ul>
+    </div>
+  </div>
+</section>
+
+<!-- ANTI-LEAKAGE -->
+<section id="methodology">
+  <div class="container">
+    <div class="section-label">Methodology</div>
+    <h2 class="section-title">Anti-Leakage Design</h2>
+    <p class="section-desc">Three layers prevent future information from contaminating predictions.</p>
+
+    <div class="leak-grid">
+      <div class="leak-card">
+        <h4><span class="leak-icon" style="background: var(--green-dim); color: var(--green);">1</span> Shifted Rolling Features</h4>
+        <p>All rolling stats use <code style="font-family:var(--mono);background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px">.shift(1)</code> so the current game's outcome is never included in its own features. A 10-game average at game N uses games 1 through N-1.</p>
+      </div>
+      <div class="leak-card">
+        <h4><span class="leak-icon" style="background: var(--accent-glow); color: var(--accent);">2</span> Prior-Season Joins</h4>
+        <p>Team quality stats (SRS, Off Rtg, Def Rtg) are joined from season N-1 to predict season N games. No in-season aggregate team stats leak into game-level predictions.</p>
+      </div>
+      <div class="leak-card">
+        <h4><span class="leak-icon" style="background: var(--yellow-dim); color: var(--yellow);">3</span> Temporal Split</h4>
+        <p>Train on 2001-2021, tune on 2022-2023, test on 2024-2025. No future season data ever touches training. Live 2026 season used for active predictions only.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIMENTS -->
+<section id="experiments">
+  <div class="container">
+    <div class="section-label">AutoResearch</div>
+    <h2 class="section-title">Experiment History</h2>
+    <p class="section-desc">33 autonomous experiments. An LLM agent modified experiment.py, evaluated against NBA_CORE, and kept improvements.</p>
+
+    <div class="exp-timeline" style="max-width: 600px;">
+      <div class="exp-item">
+        <div class="exp-name">Baseline</div>
+        <div class="exp-meta"><span>NBA_CORE: 0.2254</span></div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-name">Win totals regression-to-mean shrinkage</div>
+        <div class="exp-meta"><span>0.2281</span><span class="exp-change">+0.0027</span></div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-name">Point spread Huber loss + Ridge blend</div>
+        <div class="exp-meta"><span>0.2312</span><span class="exp-change">+0.0031</span></div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-name">Player interaction features</div>
+        <div class="exp-meta"><span>0.2322</span><span class="exp-change">+0.0010</span></div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-name">Per-season win total shrinkage</div>
+        <div class="exp-meta"><span>0.2337</span><span class="exp-change">+0.0015</span></div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-name">MVP XGB + Ridge blend</div>
+        <div class="exp-meta"><span>0.2371</span><span class="exp-change">+0.0034</span></div>
+      </div>
+      <div class="exp-item">
+        <div class="exp-name">Drop isotonic calibration</div>
+        <div class="exp-meta"><span>0.2380</span><span class="exp-change">+0.0009</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section id="stack">
+  <div class="container">
+    <div class="section-label">Built With</div>
+    <h2 class="section-title">Tech Stack</h2>
+    <div class="tech-pills" style="margin-top: 24px;">
+      <span class="tech-pill">Python 3.13</span>
+      <span class="tech-pill">XGBoost</span>
+      <span class="tech-pill">scikit-learn</span>
+      <span class="tech-pill">pandas</span>
+      <span class="tech-pill">NumPy</span>
+      <span class="tech-pill">SciPy</span>
+      <span class="tech-pill">Optuna</span>
+      <span class="tech-pill">matplotlib</span>
+      <span class="tech-pill">seaborn</span>
+      <span class="tech-pill">FastMCP</span>
+      <span class="tech-pill">BeautifulSoup</span>
+      <span class="tech-pill">pytest</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <a href="https://github.com/damionrashford/nba-predict" target="_blank" rel="noopener">github.com/damionrashford/nba-predict</a>
+  </div>
+</footer>
+
+<script>
+// ---- CSV DATA (embedded) ----
+const DATA = {};
+
+async function loadCSV(url, name) {
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+    const lines = text.trim().split('\n');
+    const headers = lines[0].split(',');
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const vals = lines[i].split(',');
+      const row = {};
+      headers.forEach((h, j) => row[h.trim()] = vals[j] ? vals[j].trim() : '');
+      rows.push(row);
+    }
+    DATA[name] = { headers, rows };
+  } catch(e) {
+    console.warn('Could not load', name, e);
+    DATA[name] = { headers: [], rows: [] };
+  }
+}
+
+// ---- TABS ----
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ---- TABLE RENDERING ----
+function renderTable(tableId, rows, columns, formatters = {}) {
+  const tbody = document.querySelector(`#${tableId} tbody`);
+  let html = '';
+  rows.forEach(row => {
+    html += '<tr>';
+    columns.forEach(col => {
+      const val = row[col] || '';
+      const fmt = formatters[col];
+      const cls = fmt ? fmt(val, row) : '';
+      html += `<td${cls ? ' class="'+cls+'"' : ''}>${val}</td>`;
+    });
+    html += '</tr>';
+  });
+  tbody.innerHTML = html;
+}
+
+function updateCount(id, shown, total) {
+  document.getElementById(id).textContent = `Showing ${shown.toLocaleString()} of ${total.toLocaleString()} rows`;
+}
+
+// ---- SORTING ----
+const sortState = {};
+document.querySelectorAll('th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const tableEl = th.closest('table');
+    const tableId = tableEl.id;
+    const col = th.dataset.sort;
+    const prev = sortState[tableId];
+    const asc = prev && prev.col === col ? !prev.asc : false;
+    sortState[tableId] = { col, asc };
+
+    tableEl.querySelectorAll('th').forEach(h => h.classList.remove('sorted'));
+    th.classList.add('sorted');
+    th.querySelector('.sort-icon').textContent = asc ? '\u25B2' : '\u25BC';
+
+    // re-filter triggers sort
+    const event = new Event('input');
+    const panel = th.closest('.tab-panel');
+    const searchInput = panel.querySelector('.filter-input');
+    if (searchInput) searchInput.dispatchEvent(event);
+  });
+});
+
+function applySorting(rows, tableId) {
+  const s = sortState[tableId];
+  if (!s) return rows;
+  const sorted = [...rows];
+  sorted.sort((a, b) => {
+    let va = a[s.col] || '', vb = b[s.col] || '';
+    const na = parseFloat(va), nb = parseFloat(vb);
+    if (!isNaN(na) && !isNaN(nb)) return s.asc ? na - nb : nb - na;
+    return s.asc ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+  return sorted;
+}
+
+// ---- FILTER LOGIC ----
+function setupFilter(dataKey, tableId, countId, columns, filterFn, formatters) {
+  const panel = document.getElementById(tableId.replace('-table', ''));
+  if (!panel) return;
+  const inputs = panel.querySelectorAll('.filter-input');
+  const run = () => {
+    const d = DATA[dataKey];
+    if (!d) return;
+    let filtered = filterFn(d.rows);
+    filtered = applySorting(filtered, tableId);
+    renderTable(tableId, filtered, columns, formatters);
+    updateCount(countId, filtered.length, d.rows.length);
+  };
+  inputs.forEach(inp => inp.addEventListener('input', run));
+  inputs.forEach(inp => inp.addEventListener('change', run));
+  // initial
+  setTimeout(run, 100);
+}
+
+// ---- FEATURE BARS ----
+const TOP_FEATURES = [
+  { name: 'diff_win_pct_season', importance: 0.1057 },
+  { name: 'diff_margin_avg_last20', importance: 0.0447 },
+  { name: 'diff_roster_total_vorp', importance: 0.0236 },
+  { name: 'diff_roster_depth_bpm', importance: 0.0123 },
+  { name: 'diff_roster_top5_bpm', importance: 0.0107 },
+  { name: 'diff_margin_avg_last10', importance: 0.0104 },
+  { name: 'away_game_num', importance: 0.0080 },
+  { name: 'diff_win_pct_last20', importance: 0.0079 },
+  { name: 'away_rest_days', importance: 0.0076 },
+  { name: 'home_margin_avg_last20', importance: 0.0072 },
+];
+function renderFeatures() {
+  const max = TOP_FEATURES[0].importance;
+  const ul = document.getElementById('feature-bars');
+  ul.innerHTML = TOP_FEATURES.map((f, i) => `
+    <li class="feature-bar-item">
+      <span class="feature-rank">${i + 1}</span>
+      <span class="feature-name">${f.name}</span>
+      <div class="feature-bar-track"><div class="feature-bar-fill" style="width:${(f.importance / max * 100).toFixed(1)}%"></div></div>
+      <span class="feature-importance">${f.importance.toFixed(4)}</span>
+    </li>
+  `).join('');
+}
+
+// ---- INIT ----
+async function init() {
+  const base = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? '../outputs/predictions/'
+    : 'data/';
+
+  await Promise.all([
+    loadCSV(base + 'game_winner_predictions.csv', 'games'),
+    loadCSV(base + 'point_spread_predictions.csv', 'spreads'),
+    loadCSV(base + 'player_performance_predictions.csv', 'players'),
+    loadCSV(base + 'win_totals_predictions.csv', 'wins'),
+    loadCSV(base + 'championship_odds_predictions.csv', 'champs'),
+    loadCSV(base + 'mvp_race_predictions.csv', 'mvp'),
+  ]);
+
+  // add computed columns
+  if (DATA.spreads) {
+    DATA.spreads.rows.forEach(r => {
+      r.error = Math.abs(parseFloat(r.pred_spread) - parseFloat(r.margin)).toFixed(1);
+    });
+  }
+
+  // Game Winners
+  setupFilter('games', 'games-table', 'games-count',
+    ['date', 'team_home', 'team_away', 'home_win_prob', 'predicted_winner', 'correct'],
+    rows => {
+      const q = document.getElementById('games-search').value.toUpperCase();
+      const s = document.getElementById('games-season').value;
+      const c = document.getElementById('games-correct').value;
+      return rows.filter(r =>
+        (!q || r.team_home.includes(q) || r.team_away.includes(q)) &&
+        (!s || r.season === s) &&
+        (!c || r.correct === c)
+      );
+    },
+    {
+      home_win_prob: v => 'text-cell',
+      correct: v => v === 'True' ? 'correct-true' : 'correct-false',
+      team_home: () => 'text-cell',
+      team_away: () => 'text-cell',
+      predicted_winner: () => 'text-cell',
+    }
+  );
+
+  // Point Spreads
+  setupFilter('spreads', 'spreads-table', 'spreads-count',
+    ['date', 'team_home', 'team_away', 'pred_spread', 'margin', 'error'],
+    rows => {
+      const q = document.getElementById('spreads-search').value.toUpperCase();
+      const s = document.getElementById('spreads-season').value;
+      return rows.filter(r =>
+        (!q || r.team_home.includes(q) || r.team_away.includes(q)) &&
+        (!s || r.season === s)
+      );
+    },
+    { team_home: () => 'text-cell', team_away: () => 'text-cell' }
+  );
+
+  // Players
+  setupFilter('players', 'players-table', 'players-count',
+    ['player', 'team', 'age', 'pts_per_g', 'pred_pts', 'ast_per_g', 'pred_ast', 'trb_per_g', 'pred_reb'],
+    rows => {
+      const q = document.getElementById('players-search').value.toUpperCase();
+      return rows.filter(r =>
+        !q || r.player.toUpperCase().includes(q) || r.team.includes(q)
+      );
+    },
+    { player: () => 'text-cell', team: () => 'text-cell' }
+  );
+
+  // Win Totals
+  setupFilter('wins', 'wins-table', 'wins-count',
+    ['team', 'season', 'actual_wins', 'pred_wins', 'error'],
+    rows => {
+      const q = document.getElementById('wins-search').value.toUpperCase();
+      const s = document.getElementById('wins-season').value;
+      return rows.filter(r =>
+        (!q || r.team.includes(q)) &&
+        (!s || r.season === s)
+      );
+    },
+    { team: () => 'text-cell' }
+  );
+
+  // Championship Odds
+  setupFilter('champs', 'champs-table', 'champs-count',
+    ['championship_rank', 'team', 'season', 'pred_wins', 'championship_prob'],
+    rows => {
+      const q = document.getElementById('champs-search').value.toUpperCase();
+      const s = document.getElementById('champs-season').value;
+      return rows.filter(r =>
+        (!q || r.team.includes(q)) &&
+        (!s || r.season === s)
+      );
+    },
+    { team: () => 'text-cell' }
+  );
+
+  // MVP Race
+  setupFilter('mvp', 'mvp-table', 'mvp-count',
+    ['player', 'team', 'season', 'pts_per_g', 'per', 'bpm', 'actual_award_share', 'pred_award_share'],
+    rows => {
+      const q = document.getElementById('mvp-search').value.toUpperCase();
+      const s = document.getElementById('mvp-season').value;
+      return rows.filter(r =>
+        (!q || r.player.toUpperCase().includes(q) || r.team.includes(q)) &&
+        (!s || r.season === s)
+      );
+    },
+    { player: () => 'text-cell', team: () => 'text-cell' }
+  );
+
+  renderFeatures();
+}
+
+init();
+</script>
+</body>
+</html>
