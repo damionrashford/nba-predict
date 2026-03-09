@@ -96,7 +96,15 @@ python -m pytest tests/ -v                                       # run tests
 
 ## Data
 
-23 CSV datasets scraped from Basketball Reference (2000-2026, ~39 MB, 335K+ rows). Game schedules, team stats, player stats, rosters, draft history, awards, injuries, tracking data, and social sentiment.
+23 CSV datasets scraped from [Basketball Reference](https://www.basketball-reference.com/) (2000-2026, ~39 MB, 335K+ rows):
+
+| Category | Datasets |
+|----------|----------|
+| Games | `schedules.csv`, `standings.csv` |
+| Teams | `teams_advanced.csv`, `teams_per_game.csv`, `teams_opponent.csv`, `teams_shooting.csv` |
+| Players | `players_per_game.csv`, `players_advanced.csv`, `players_per_36.csv`, `players_per_100.csv`, `players_totals.csv`, `players_shooting.csv`, `players_adj_shooting.csv`, `players_play_by_play.csv` |
+| Personnel | `rosters.csv`, `draft.csv`, `awards.csv` |
+| External | `sentiment.csv`, `injuries.csv`, `tracking.csv`, `clutch.csv`, `arenas.csv` |
 
 ---
 
