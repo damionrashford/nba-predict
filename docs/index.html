@@ -140,7 +140,8 @@
     .chart-card:hover { border-color: var(--border-hover); }
     .chart-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
     .chart-card .chart-subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
-    .chart-card canvas { width: 100% !important; }
+    .chart-wrap { position: relative; height: 300px; width: 100%; }
+    .chart-wrap canvas { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
     .chart-card.wide { grid-column: 1 / -1; }
 
     /* MODEL CARDS */
@@ -368,56 +369,56 @@
       <div class="chart-card">
         <h3>Model vs Baseline</h3>
         <div class="chart-subtitle">Improvement over naive baselines across all targets</div>
-        <canvas id="chart-baseline" height="280"></canvas>
+        <div class="chart-wrap"><canvas id="chart-baseline"></canvas></div>
       </div>
 
       <!-- 2. Calibration -->
       <div class="chart-card">
         <h3>Game Winner Calibration</h3>
         <div class="chart-subtitle">Predicted win probability vs actual win rate (10 bins)</div>
-        <canvas id="chart-calibration" height="280"></canvas>
+        <div class="chart-wrap"><canvas id="chart-calibration"></canvas></div>
       </div>
 
       <!-- 3. Spread: Predicted vs Actual -->
       <div class="chart-card">
         <h3>Point Spread: Predicted vs Actual</h3>
         <div class="chart-subtitle">Each dot is one game. Closer to diagonal = better</div>
-        <canvas id="chart-spread" height="280"></canvas>
+        <div class="chart-wrap"><canvas id="chart-spread"></canvas></div>
       </div>
 
       <!-- 4. Win Prob Distribution -->
       <div class="chart-card">
         <h3>Win Probability Distribution</h3>
         <div class="chart-subtitle">How confident is the model? Histogram of predicted probabilities</div>
-        <canvas id="chart-prob-dist" height="280"></canvas>
+        <div class="chart-wrap"><canvas id="chart-prob-dist"></canvas></div>
       </div>
 
       <!-- 5. Player Predictions -->
       <div class="chart-card">
         <h3>Player PTS: Predicted vs Actual</h3>
         <div class="chart-subtitle">Next-season scoring predictions for 729 players</div>
-        <canvas id="chart-player-pts" height="280"></canvas>
+        <div class="chart-wrap"><canvas id="chart-player-pts"></canvas></div>
       </div>
 
       <!-- 6. MVP Award Share -->
       <div class="chart-card">
         <h3>MVP Award Share: Predicted vs Actual</h3>
         <div class="chart-subtitle">Spearman correlation = 0.911</div>
-        <canvas id="chart-mvp" height="280"></canvas>
+        <div class="chart-wrap"><canvas id="chart-mvp"></canvas></div>
       </div>
 
       <!-- 7. Feature Importance -->
       <div class="chart-card">
         <h3>Top 10 Features: Game Winner</h3>
         <div class="chart-subtitle">XGBoost feature importance (gain)</div>
-        <canvas id="chart-features" height="280"></canvas>
+        <div class="chart-wrap"><canvas id="chart-features"></canvas></div>
       </div>
 
       <!-- 8. NBA_CORE Progression -->
       <div class="chart-card">
         <h3>NBA_CORE Over 33 Experiments</h3>
         <div class="chart-subtitle">Autonomous experiment loop improvement trajectory</div>
-        <canvas id="chart-nbacore" height="280"></canvas>
+        <div class="chart-wrap"><canvas id="chart-nbacore"></canvas></div>
       </div>
     </div>
   </div>
