@@ -287,10 +287,10 @@
   <div class="nav-inner">
     <a href="#" class="nav-brand">NBA<span>Predict</span></a>
     <ul class="nav-links">
-      <li><a href="#results">Results</a></li>
-      <li><a href="#charts">Charts</a></li>
+      <li><a href="#charts">Results</a></li>
       <li><a href="#models">Models</a></li>
-      <li><a href="#predictions">Predictions</a></li>
+      <li><a href="#predictions">Explorer</a></li>
+      <li><a href="#methodology">Methodology</a></li>
       <li><a href="#experiments">Experiments</a></li>
     </ul>
     <a href="https://github.com/damionrashford/nba-predict" target="_blank" rel="noopener" class="nav-gh">
@@ -333,42 +333,18 @@
   </div>
 </section>
 
-<!-- RESULTS TABLE -->
-<section id="results">
-  <div class="container">
-    <div class="section-label">Evaluation</div>
-    <h2 class="section-title">Test Set Results</h2>
-    <p class="section-desc">All metrics on held-out 2024-2025 seasons, never seen during training or tuning.</p>
-    <div class="table-wrapper">
-      <table>
-        <thead><tr><th>Model</th><th>Metric</th><th>Score</th><th>Baseline</th><th>Improvement</th></tr></thead>
-        <tbody>
-          <tr><td class="text-cell">Game Winner</td><td class="text-cell">Accuracy</td><td>66.1%</td><td>54.4%</td><td class="correct-true">+11.7 pp</td></tr>
-          <tr><td class="text-cell">Game Winner</td><td class="text-cell">AUC-ROC</td><td>0.719</td><td>-</td><td>-</td></tr>
-          <tr><td class="text-cell">Point Spread</td><td class="text-cell">MAE</td><td>10.94 pts</td><td>12.56 pts</td><td class="correct-true">+12.9%</td></tr>
-          <tr><td class="text-cell">Player PTS</td><td class="text-cell">MAE</td><td>2.25</td><td>2.48</td><td class="correct-true">+9.3%</td></tr>
-          <tr><td class="text-cell">Player AST</td><td class="text-cell">MAE</td><td>0.66</td><td>0.73</td><td class="correct-true">+9.6%</td></tr>
-          <tr><td class="text-cell">Player REB</td><td class="text-cell">MAE</td><td>0.77</td><td>0.80</td><td class="correct-true">+3.8%</td></tr>
-          <tr><td class="text-cell">Win Totals</td><td class="text-cell">MAE</td><td>8.61 wins</td><td>8.80 wins</td><td class="correct-true">+2.2%</td></tr>
-          <tr><td class="text-cell">MVP Race</td><td class="text-cell">Spearman</td><td>0.911</td><td>-</td><td>-</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
 <!-- CHARTS -->
 <section id="charts">
   <div class="container">
-    <div class="section-label">Visualizations</div>
-    <h2 class="section-title">Model Performance</h2>
-    <p class="section-desc">Visual analysis of predictions across all four models.</p>
+    <div class="section-label">Evaluation</div>
+    <h2 class="section-title">How Good Are the Predictions?</h2>
+    <p class="section-desc">All metrics evaluated on held-out 2024-2025 seasons, never seen during training or tuning.</p>
 
     <div class="chart-grid">
-      <!-- 1. Model vs Baseline -->
+      <!-- 1. Improvement over Baseline -->
       <div class="chart-card">
-        <h3>Model vs Baseline</h3>
-        <div class="chart-subtitle">Improvement over naive baselines across all targets</div>
+        <h3>Improvement Over Baseline</h3>
+        <div class="chart-subtitle">% improvement vs naive baselines (higher = better for all metrics)</div>
         <div class="chart-wrap"><canvas id="chart-baseline"></canvas></div>
       </div>
 
@@ -427,9 +403,9 @@
 <!-- MODELS -->
 <section id="models">
   <div class="container">
-    <div class="section-label">Architecture</div>
-    <h2 class="section-title">4 Models</h2>
-    <p class="section-desc">Each model targets a different prediction task with its own feature set and algorithm.</p>
+    <div class="section-label">Models</div>
+    <h2 class="section-title">What Gets Predicted</h2>
+    <p class="section-desc">Four XGBoost models, each targeting a different prediction task with its own features and tuning.</p>
     <div class="model-grid">
       <div class="model-card">
         <h3>Game Winner</h3>
@@ -444,9 +420,9 @@
         <h3>Point Spread</h3>
         <div class="model-type">Regression</div>
         <div class="model-stat"><span class="model-stat-label">MAE</span><span class="model-stat-value">10.94 pts</span></div>
-        <div class="model-stat"><span class="model-stat-label">RMSE</span><span class="model-stat-value">14.14 pts</span></div>
-        <div class="model-stat"><span class="model-stat-label">Derived Acc</span><span class="model-stat-value">66.4%</span></div>
-        <div class="model-stat"><span class="model-stat-label">Loss</span><span class="model-stat-value" style="font-size:12px">Huber</span></div>
+        <div class="model-stat"><span class="model-stat-label">Baseline MAE</span><span class="model-stat-value" style="color:var(--text-muted)">12.56 pts</span></div>
+        <div class="model-stat"><span class="model-stat-label">Improvement</span><span class="model-stat-value" style="color:var(--green)">+12.9%</span></div>
+        <div class="model-stat"><span class="model-stat-label">Loss Function</span><span class="model-stat-value" style="font-size:12px">Huber</span></div>
         <div class="model-algo">XGB + Ridge blend (65/35)</div>
       </div>
       <div class="model-card">
@@ -462,10 +438,10 @@
         <h3>Season Outcomes</h3>
         <div class="model-type">Win Totals + MVP</div>
         <div class="model-stat"><span class="model-stat-label">Wins MAE</span><span class="model-stat-value">8.61</span></div>
+        <div class="model-stat"><span class="model-stat-label">Wins Baseline</span><span class="model-stat-value" style="color:var(--text-muted)">8.80</span></div>
         <div class="model-stat"><span class="model-stat-label">MVP Spearman</span><span class="model-stat-value">0.911</span></div>
-        <div class="model-stat"><span class="model-stat-label">MVP MAE</span><span class="model-stat-value">0.011</span></div>
-        <div class="model-stat"><span class="model-stat-label">Shrinkage</span><span class="model-stat-value">s=0.33</span></div>
-        <div class="model-algo">Shrinkage + XGB-Ridge blend</div>
+        <div class="model-stat"><span class="model-stat-label">Approach</span><span class="model-stat-value" style="font-size:11px">Shrinkage s=0.33</span></div>
+        <div class="model-algo">Regression-to-mean + XGB-Ridge MVP blend</div>
       </div>
     </div>
   </div>
@@ -712,23 +688,44 @@ Chart.defaults.elements.point.hoverRadius = 5;
 
 // ---- BUILD CHARTS ----
 function buildCharts() {
-  // 1. Model vs Baseline (horizontal bar)
+  // 1. % Improvement over Baseline (horizontal bar)
+  // Accuracy: (66.1 - 54.4) / 54.4 = 21.5%
+  // MAE metrics: (baseline - model) / baseline * 100
+  const improvements = [
+    { label: 'Game Winner', val: 21.5, detail: '66.1% vs 54.4% accuracy' },
+    { label: 'Point Spread', val: 12.9, detail: '10.94 vs 12.56 MAE' },
+    { label: 'Player AST', val: 9.6, detail: '0.66 vs 0.73 MAE' },
+    { label: 'Player PTS', val: 9.3, detail: '2.25 vs 2.48 MAE' },
+    { label: 'Player REB', val: 3.8, detail: '0.77 vs 0.80 MAE' },
+    { label: 'Win Totals', val: 2.2, detail: '8.61 vs 8.80 MAE' },
+  ];
   new Chart(document.getElementById('chart-baseline'), {
     type: 'bar',
     data: {
-      labels: ['Game Winner (Acc)', 'Spread (MAE)', 'PTS (MAE)', 'AST (MAE)', 'REB (MAE)', 'Win Totals (MAE)'],
-      datasets: [
-        { label: 'Model', data: [66.1, 10.94, 2.25, 0.66, 0.77, 8.61], backgroundColor: 'rgba(99,102,241,0.7)', borderRadius: 4 },
-        { label: 'Baseline', data: [54.4, 12.56, 2.48, 0.73, 0.80, 8.80], backgroundColor: 'rgba(85,85,106,0.4)', borderRadius: 4 },
-      ]
+      labels: improvements.map(d => d.label),
+      datasets: [{
+        label: '% Improvement',
+        data: improvements.map(d => d.val),
+        backgroundColor: improvements.map(d =>
+          d.val > 10 ? 'rgba(34,197,94,0.6)' : d.val > 5 ? 'rgba(99,102,241,0.6)' : 'rgba(234,179,8,0.5)'
+        ),
+        borderRadius: 4,
+      }]
     },
     options: {
       indexAxis: 'y',
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { position: 'top' } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => improvements[ctx.dataIndex].detail + ' (' + ctx.parsed.x.toFixed(1) + '% better)'
+          }
+        }
+      },
       scales: {
-        x: { grid: { color: 'rgba(30,30,46,0.5)' } },
+        x: { grid: { color: 'rgba(30,30,46,0.5)' }, title: { display: true, text: '% Improvement', color: '#55556a' }, min: 0 },
         y: { grid: { display: false } },
       }
     }
