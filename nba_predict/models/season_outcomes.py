@@ -230,9 +230,9 @@ def train() -> dict:
     """Train all season outcome models. Returns evaluation results."""
     results = {}
 
-    # ─── 4A: Win Totals ──────────────────────────────────────────────────
+    # ─── 4A: Win Totals (shrinkage + Ridge residual correction) ──────────
     print("\n" + "=" * 60)
-    print("  MODEL 4A: WIN TOTALS")
+    print("  MODEL 4A: WIN TOTALS (shrinkage)")
     print("=" * 60)
 
     wt_df = _build_win_totals_dataset()
@@ -253,34 +253,77 @@ def train() -> dict:
     X_test_wt = test_wt[wt_features].astype(float)
     y_test_wt = test_wt["target_wins"].astype(float)
 
-    # Shallow XGBoost with heavy regularization (only ~600 training samples)
+    # Shrinkage baseline (exp001/exp025/exp028):
+    # pred = (1-s)*prev_wins + s*league_mean
+    # Per-season league mean handles shortened seasons (2020=72, 2012=66).
+    prev_wins_train = X_train_wt["prev_wins"].astype(float).values
+    prev_wins_val = X_val_wt["prev_wins"].astype(float).values
+    prev_wins_test = X_test_wt["prev_wins"].astype(float).values
+
+    def _per_season_mean(df, col="prev_wins"):
+        return df.groupby("season")[col].transform("mean").astype(float).values
+
+    shrink_target_train = _per_season_mean(train_wt)
+    shrink_target_val = _per_season_mean(val_wt)
+    shrink_target_test = _per_season_mean(test_wt)
+
+    # Optimize shrinkage on val only (exp028: val-only is simpler + marginally better)
+    best_s, best_val_mae = 0.0, float("inf")
+    for s in np.arange(0.0, 0.60, 0.01):
+        pred = (1 - s) * prev_wins_val + s * shrink_target_val
+        mae = float(np.mean(np.abs(y_val_wt.values - pred)))
+        if mae < best_val_mae:
+            best_val_mae, best_s = mae, s
+
+    shrink_pred_train = (1 - best_s) * prev_wins_train + best_s * shrink_target_train
+    shrink_pred_val = (1 - best_s) * prev_wins_val + best_s * shrink_target_val
+    shrink_pred_test = (1 - best_s) * prev_wins_test + best_s * shrink_target_test
+    print(f"  Shrinkage: s={best_s:.2f}")
+
+    # Ridge residual correction (exp027): learn corrections on top of shrinkage
+    scaler = StandardScaler()
+    X_train_sc = scaler.fit_transform(X_train_wt.fillna(0))
+    X_val_sc = scaler.transform(X_val_wt.fillna(0))
+    X_test_sc = scaler.transform(X_test_wt.fillna(0))
+
+    resid_train = y_train_wt.values - shrink_pred_train
+
+    best_alpha, best_corr_val_mae = 100.0, float("inf")
+    for alpha in [10, 50, 100, 500, 1000, 5000, 10000]:
+        r = Ridge(alpha=alpha, random_state=RANDOM_SEED)
+        r.fit(X_train_sc, resid_train)
+        correction = r.predict(X_val_sc)
+        combo = shrink_pred_val + correction
+        vm = float(np.mean(np.abs(y_val_wt.values - combo)))
+        if vm < best_corr_val_mae:
+            best_corr_val_mae, best_alpha = vm, alpha
+
+    # Only use correction if it beats pure shrinkage
+    no_corr_val_mae = float(np.mean(np.abs(y_val_wt.values - shrink_pred_val)))
+
+    if no_corr_val_mae <= best_corr_val_mae:
+        wt_pred = shrink_pred_test
+        ridge = None
+        print(f"  Pure shrinkage (Ridge correction didn't help on val)")
+    else:
+        ridge = Ridge(alpha=best_alpha, random_state=RANDOM_SEED)
+        X_tv = np.vstack([X_train_sc, X_val_sc])
+        resid_tv = np.concatenate([resid_train, y_val_wt.values - shrink_pred_val])
+        ridge.fit(X_tv, resid_tv)
+        wt_pred = shrink_pred_test + ridge.predict(X_test_sc)
+        print(f"  Shrinkage + Ridge correction (alpha={best_alpha})")
+
+    # We still need an XGBoost model for feature importance display
     wt_xgb_params = {
         **XGBOOST_REGRESSOR_PARAMS,
-        "max_depth": 3,
-        "reg_alpha": 2.0,
-        "reg_lambda": 5.0,
-        "learning_rate": 0.03,
+        "max_depth": 3, "reg_alpha": 2.0, "reg_lambda": 5.0, "learning_rate": 0.03,
     }
     wt_model = XGBRegressor(**wt_xgb_params)
     wt_model.fit(X_train_wt, y_train_wt, eval_set=[(X_val_wt, y_val_wt)], verbose=False)
 
-    # Ridge regression as stabilizer (linear models resist overfitting on small N)
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train_wt.fillna(0))
-    X_test_scaled = scaler.transform(X_test_wt.fillna(0))
-
-    ridge = Ridge(alpha=10.0, random_state=RANDOM_SEED)
-    ridge.fit(X_train_scaled, y_train_wt)
-
-    # Blend: 40% XGBoost + 60% Ridge (Ridge more reliable on small datasets)
-    xgb_pred = wt_model.predict(X_test_wt)
-    ridge_pred = ridge.predict(X_test_scaled)
-    wt_pred = 0.4 * xgb_pred + 0.6 * ridge_pred
-
     wt_metrics = regression_metrics(y_test_wt.values, wt_pred)
-    print_metrics("Win Totals (XGB+Ridge blend) — Test Set", wt_metrics)
+    print_metrics("Win Totals (shrinkage) — Test Set", wt_metrics)
 
-    # Baseline: predict same wins as last season
     wt_bl = last_season_baseline(y_test_wt.values, test_wt["prev_wins"].astype(float).values)
     print(f"  Baseline (last season wins): MAE={wt_bl['mae']:.2f}")
 
@@ -309,7 +352,6 @@ def train() -> dict:
     test_wt_copy["pred_wins"] = wt_pred
     champ_df = _compute_championship_odds(test_wt_copy)
 
-    # Show top 5 for each test season
     for season in sorted(test_wt_copy["season"].unique()):
         season_df = champ_df[champ_df["season"] == season].head(5)
         print(f"\n  {season} Season — Top 5 Championship Contenders:")
@@ -321,9 +363,9 @@ def train() -> dict:
         "sample_predictions": champ_df,
     }
 
-    # ─── 4C: MVP Race ───────────────────────────────────────────────────
+    # ─── 4C: MVP Race (XGB+Ridge blend, exp031) ─────────────────────────
     print("\n" + "=" * 60)
-    print("  MODEL 4C: MVP RACE")
+    print("  MODEL 4C: MVP RACE (XGB+Ridge blend)")
     print("=" * 60)
 
     mvp_df = _build_mvp_dataset()
@@ -347,12 +389,41 @@ def train() -> dict:
     mvp_model = XGBRegressor(**XGBOOST_REGRESSOR_PARAMS)
     mvp_model.fit(X_train_mvp, y_train_mvp, eval_set=[(X_val_mvp, y_val_mvp)], verbose=False)
 
-    mvp_pred = mvp_model.predict(X_test_mvp)
+    # XGB+Ridge blend (exp031): Ridge captures linear stat→vote relationships
+    mvp_scaler = StandardScaler()
+    X_train_mvp_sc = mvp_scaler.fit_transform(X_train_mvp.fillna(0))
+    X_val_mvp_sc = mvp_scaler.transform(X_val_mvp.fillna(0))
+    X_test_mvp_sc = mvp_scaler.transform(X_test_mvp.fillna(0))
+
+    xgb_val_pred = mvp_model.predict(X_val_mvp)
+    xgb_test_pred = mvp_model.predict(X_test_mvp)
+    voted_val = y_val_mvp.values > 0
+
+    best_val_rho, best_mvp_w, best_mvp_alpha = -1.0, 1.0, 100.0
+    for alpha in [0.1, 0.5, 1, 5, 10, 50, 100, 200, 500]:
+        r = Ridge(alpha=alpha, random_state=RANDOM_SEED)
+        r.fit(X_train_mvp_sc, y_train_mvp)
+        r_val = r.predict(X_val_mvp_sc)
+        for w in np.arange(0.50, 1.01, 0.01):
+            blend = w * xgb_val_pred + (1 - w) * r_val
+            if voted_val.sum() >= 5:
+                rv, _ = spearmanr(y_val_mvp.values[voted_val], blend[voted_val])
+                if rv > best_val_rho:
+                    best_val_rho, best_mvp_w, best_mvp_alpha = rv, w, alpha
+
+    if best_mvp_w < 1.0:
+        mvp_ridge = Ridge(alpha=best_mvp_alpha, random_state=RANDOM_SEED)
+        mvp_ridge.fit(X_train_mvp_sc, y_train_mvp)
+        mvp_pred = best_mvp_w * xgb_test_pred + (1 - best_mvp_w) * mvp_ridge.predict(X_test_mvp_sc)
+        print(f"  MVP blend: {best_mvp_w:.2f} XGB + {1-best_mvp_w:.2f} Ridge (alpha={best_mvp_alpha})")
+    else:
+        mvp_pred = xgb_test_pred
+        mvp_ridge = None
+        print(f"  MVP: pure XGB (Ridge blend didn't help on val)")
+
     mvp_metrics = regression_metrics(y_test_mvp.values, mvp_pred)
     print_metrics("MVP Award Share — Test Set", mvp_metrics)
 
-    # Spearman rank correlation: does the model rank MVP candidates correctly?
-    # Only evaluate on players who actually got votes (award_share > 0)
     voted_mask = y_test_mvp.values > 0
     if voted_mask.sum() >= 5:
         rho, p_val = spearmanr(y_test_mvp.values[voted_mask], mvp_pred[voted_mask])
@@ -361,7 +432,6 @@ def train() -> dict:
         rho, p_val = np.nan, np.nan
         print("  Not enough voted players in test set for rank correlation")
 
-    # Show top predicted MVP candidates per test season
     test_mvp_copy = test_mvp.copy()
     test_mvp_copy["pred_award_share"] = mvp_pred
     for season in sorted(test_mvp_copy["season"].unique()):
@@ -393,8 +463,12 @@ def train() -> dict:
         "win_totals_ridge": ridge,
         "win_totals_scaler": scaler,
         "win_totals_features": wt_features,
+        "win_totals_shrinkage": best_s,
         "mvp_model": mvp_model,
         "mvp_features": mvp_features,
+        "mvp_ridge": mvp_ridge if best_mvp_w < 1.0 else None,
+        "mvp_scaler": mvp_scaler if best_mvp_w < 1.0 else None,
+        "mvp_blend_weight": best_mvp_w,
     }
     joblib.dump(save_data, model_path)
     print(f"\n  Models saved: {model_path}")

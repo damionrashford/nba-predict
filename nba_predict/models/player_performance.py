@@ -128,6 +128,15 @@ def _build_player_dataset() -> pd.DataFrame:
     season_counts.columns = ["player", "career_seasons"]
     df = df.merge(season_counts, on="player", how="left")
 
+    # Interaction features (exp011/exp012): capture role-dependent stat relationships
+    df["pos_x_orb"] = df["pos_encoded"] * df["orb_per_g"]
+    df["pos_x_drb"] = df["pos_encoded"] * df["drb_per_g"]
+    df["pos_x_trb"] = df["pos_encoded"] * df["trb_per_g"]
+    df["mp_x_trb"] = df["mp_per_g"] * df["trb_per_g"]
+    df["usg_x_pts"] = df["usg_pct"] * df["pts_per_g"]
+    df["mp_x_pts"] = df["mp_per_g"] * df["pts_per_g"]
+    df["ts_x_usg"] = df["ts_pct"] * df["usg_pct"]
+
     return df
 
 
@@ -149,6 +158,9 @@ def get_feature_columns() -> list[str]:
         "g",
         # Team context (prior season)
         "team_off_rtg", "team_def_rtg", "team_pace", "team_srs",
+        # Interaction features (exp011/exp012)
+        "pos_x_orb", "pos_x_drb", "pos_x_trb", "mp_x_trb",
+        "usg_x_pts", "mp_x_pts", "ts_x_usg",
     ]
 
 
@@ -176,9 +188,23 @@ def train() -> dict:
     print(f"  Features: {len(feature_cols)}")
     print(f"  Train: {len(train_df):,} | Val: {len(val_df):,} | Test: {len(test_df):,}")
 
-    X_train = train_df[feature_cols].astype(float)
-    X_val = val_df[feature_cols].astype(float)
-    X_test = test_df[feature_cols].astype(float)
+    # Per-target hyperparameters (exp004/exp006/exp017)
+    target_params = {
+        "pts": {**XGBOOST_REGRESSOR_PARAMS, "max_depth": 5, "n_estimators": 600,
+                "learning_rate": 0.04, "min_child_weight": 3},
+        "ast": {**XGBOOST_REGRESSOR_PARAMS, "max_depth": 3, "n_estimators": 800,
+                "learning_rate": 0.03, "min_child_weight": 8, "reg_lambda": 3.0,
+                "reg_alpha": 0.5},
+        "reb": {**XGBOOST_REGRESSOR_PARAMS, "max_depth": 4, "reg_alpha": 1.0,
+                "reg_lambda": 3.0, "min_child_weight": 8},
+    }
+
+    # Per-target feature exclusions (exp029): scoring interactions hurt REB
+    target_exclude = {
+        "pts": [],
+        "ast": [],
+        "reb": ["usg_x_pts", "mp_x_pts", "ts_x_usg"],
+    }
 
     results = {}
 
@@ -191,13 +217,18 @@ def train() -> dict:
         y_val = val_df[target_col].astype(float)
         y_test = test_df[target_col].astype(float)
 
-        # Train
-        model = XGBRegressor(**XGBOOST_REGRESSOR_PARAMS)
-        model.fit(
-            X_train, y_train,
-            eval_set=[(X_val, y_val)],
-            verbose=False,
-        )
+        # Per-target feature set
+        excl = target_exclude.get(target_name, [])
+        t_cols = [c for c in feature_cols if c not in excl]
+
+        X_train = train_df[t_cols].astype(float)
+        X_val = val_df[t_cols].astype(float)
+        X_test = test_df[t_cols].astype(float)
+
+        # Train with per-target params
+        params = target_params.get(target_name, XGBOOST_REGRESSOR_PARAMS)
+        model = XGBRegressor(**params)
+        model.fit(X_train, y_train, eval_set=[(X_val, y_val)], verbose=False)
 
         # Evaluate
         y_pred = model.predict(X_test)
@@ -205,7 +236,6 @@ def train() -> dict:
         print_metrics(f"Player {target_name.upper()} — Test Set", test_metrics)
 
         # Baseline: predict same as last season
-        # The prior-season value is already in our feature columns
         prior_col = {"pts": "pts_per_g", "ast": "ast_per_g", "reb": "trb_per_g"}[target_name]
         y_prior = test_df[prior_col].astype(float).values
         bl = last_season_baseline(y_test.values, y_prior)
@@ -215,7 +245,7 @@ def train() -> dict:
         print(f"  Improvement over baseline: {improvement:+.1f}%")
 
         # Feature importance
-        fi = feature_importance(model, feature_cols, top_n=10)
+        fi = feature_importance(model, t_cols, top_n=10)
         print(f"\n  Top 10 Features:")
         for _, row in fi.iterrows():
             print(f"    {row['feature']:30s} {row['importance']:.4f}")

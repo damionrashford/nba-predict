@@ -12,74 +12,6 @@ NBA prediction system trained on 26 seasons (2000-2026) of Basketball Reference 
 - FastMCP for agent interface (optional)
 - No deep learning — pure gradient-boosted trees
 
-## Directory Structure
-
-```
-nba-ref/
-├── data/                    # 23 CSV datasets from Basketball Reference
-├── nba_predict/             # Core prediction library (sacred — read-only)
-│   ├── config.py            # Central config: splits, seeds, paths, XGB defaults
-│   ├── pipeline.py          # Training orchestrator (registry + dynamic import)
-│   ├── tuning.py            # Optuna hyperparameter search
-│   ├── models/
-│   │   ├── game_winner.py       # Model 1: Binary classification (home win?)
-│   │   ├── point_spread.py      # Model 2: Margin regression
-│   │   ├── player_performance.py # Model 3: Multi-target PTS/AST/REB
-│   │   └── season_outcomes.py   # Model 4: Win totals + championship + MVP
-│   ├── features/
-│   │   ├── game_features.py     # Rolling stats with shift(1) anti-leakage
-│   │   ├── team_features.py     # Prior-season team quality joins
-│   │   ├── player_features.py   # Roster quality aggregation
-│   │   ├── matchup_features.py  # Home-away pairing + differentials
-│   │   └── selection.py         # Feature selection utilities
-│   ├── data/
-│   │   ├── loader.py            # 12 CSV loaders with normalization
-│   │   ├── cleaning.py          # Data cleaning (dates, team names, floats)
-│   │   ├── team_mapping.py      # 30-team canonical name mapping
-│   │   ├── sentiment.py         # Social sentiment data handling
-│   │   └── social_team_mapping.py
-│   └── evaluation/
-│       ├── metrics.py           # Accuracy, MAE, RMSE, AUC, Brier, ECE
-│       ├── baselines.py         # Naive baselines (always home, last season, etc.)
-│       └── report.py            # Markdown report generator
-├── scripts/
-│   ├── train.py             # Train all or specific models
-│   ├── predict.py           # Make predictions on live season
-│   ├── evaluate.py          # Train all + generate report
-│   ├── generate_predictions.py # Batch-generate all prediction CSVs
-│   ├── collect_data.py      # Scrape Basketball Reference (908 lines)
-│   ├── collect_sentiment.py # Scrape social sentiment
-│   ├── collect_injuries.py  # Scrape injury reports
-│   ├── collect_odds.py      # Scrape betting odds
-│   └── collect_tracking.py  # Scrape player tracking data
-├── agent/
-│   ├── agent.py             # FastMCP agent entry point
-│   ├── config.yaml          # MCP server config
-│   ├── instruction.md       # Agent system prompt
-│   └── mcp/
-│       ├── nba_mcp.py       # Data query MCP server (7 tools)
-│       └── predict_mcp.py   # Prediction MCP server (5 tools)
-├── autoresearch/            # Autonomous experiment framework (Karpathy-style)
-│   ├── constants.py         # Sacred: baselines, NBA_CORE weights, timeout
-│   ├── evaluate.py          # Sacred: computes NBA_CORE composite score
-│   ├── experiment.py        # THE ONLY EDITABLE FILE for the agent
-│   ├── program.md           # Agent instructions for autonomous loop
-│   ├── results.tsv          # Experiment log (33 experiments)
-│   ├── injury_features.py   # Injury report feature engineering
-│   ├── tracking_features.py # Player tracking feature engineering
-│   └── outputs/models/      # Experiment model artifacts (isolated)
-├── tests/                   # Unit test suite (51 tests)
-│   ├── test_cleaning.py     # Data parsing tests
-│   ├── test_team_mapping.py # Team normalization tests
-│   ├── test_metrics.py      # Evaluation metric tests
-│   └── test_baselines.py    # Baseline model tests
-├── outputs/
-│   ├── models/              # Trained .joblib artifacts
-│   ├── predictions/         # Sample prediction CSVs (6 files)
-│   └── reports/             # Evaluation markdown reports
-└── notebooks/               # EDA + analysis notebooks (4 notebooks)
-```
-
 ## Temporal Splits (SACRED — never change)
 
 - Train: 2001-2021 (21 seasons)
@@ -92,7 +24,7 @@ Season 2000 is dropped (no prior-season data for features).
 ## Commands
 
 ```bash
-# Train all models
+# Train all models (uses latest experiment improvements)
 python scripts/train.py
 
 # Train a specific model
@@ -108,6 +40,9 @@ python scripts/predict.py --model season_outcomes --season 2026
 
 # Generate all sample prediction CSVs
 python scripts/generate_predictions.py
+
+# Promote autoresearch models → production + regenerate outputs
+python scripts/promote.py
 
 # Run unit tests
 python -m pytest tests/ -v
@@ -130,17 +65,52 @@ python autoresearch/evaluate.py
 | MVP Race | Spearman | 0.9111 | — | Strong |
 | **NBA_CORE** | Composite | **0.2380** | 0.0 | — |
 
-## AutoResearch System
+## Workflows
 
-Inspired by Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) and [nanochat](https://github.com/karpathy/nanochat). An autonomous experiment loop where an LLM agent modifies `autoresearch/experiment.py`, runs evaluations, and keeps/discards results based on NBA_CORE improvement.
+### Training (standard)
 
-**Key rules:**
-- `autoresearch/experiment.py` is the ONLY editable file
-- `autoresearch/evaluate.py` and `autoresearch/constants.py` are sacred
-- All core code in `nba_predict/` is sacred — never modified by the agent
-- Experiment models save to `autoresearch/outputs/models/` (isolated from core)
-- Results logged to `autoresearch/results.tsv`
-- Agent follows instructions in `autoresearch/program.md`
+`python scripts/train.py` trains all 4 models using `nba_predict/models/`. Models save to `outputs/models/`. This always produces the latest best configuration (all autoresearch improvements are ported back into the core model code).
+
+### AutoResearch (experiment loop)
+
+Autonomous experiment loop where an LLM agent modifies `autoresearch/experiment.py`, runs evaluations, and keeps/discards results based on NBA_CORE improvement. Inspired by [Karpathy's autoresearch](https://github.com/karpathy/autoresearch).
+
+**The loop:**
+1. Agent modifies `autoresearch/experiment.py` (ONE focused change)
+2. Runs `python autoresearch/evaluate.py` → computes NBA_CORE
+3. If improved: commit + append `keep` to `results.tsv`
+4. If worse: revert + append `discard` to `results.tsv`
+5. **Promote** (on keep): `python scripts/promote.py`
+   - Copies winning artifacts to `outputs/models/`
+   - Regenerates prediction CSVs
+   - Syncs data to `docs/data/` for the site
+6. Repeat
+
+**Sacred files (never modified by the agent):**
+- `autoresearch/evaluate.py` — immutable evaluation harness
+- `autoresearch/constants.py` — baselines, NBA_CORE weights, timeout
+- `nba_predict/config.py` — splits, seeds, paths
+- `nba_predict/features/**` — feature engineering
+- `nba_predict/data/**` — data loading
+- `nba_predict/evaluation/**` — metrics and baselines
+
+**Editable by the agent:**
+- `autoresearch/experiment.py` — the experiment sandbox
+- `nba_predict/models/**` — core model code (updated after winning experiments)
+- `scripts/**` — training and prediction scripts
+
+### Promotion Pipeline
+
+When an autoresearch experiment wins, improvements flow back to production:
+
+```
+experiment.py wins → python scripts/promote.py
+    → copies .joblib artifacts to outputs/models/
+    → regenerates outputs/predictions/*.csv
+    → syncs docs/data/ for GitHub Pages site
+```
+
+After promotion, the agent should also port code improvements from `experiment.py` back into the corresponding `nba_predict/models/` files so `scripts/train.py` always produces the best models.
 
 **NBA_CORE** is a weighted composite score (0 = naive baselines, 1 = perfect):
 - Game winner accuracy: 20% weight
@@ -153,7 +123,7 @@ Inspired by Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) 
 ## Anti-Leakage Design
 
 1. All rolling features use `.shift(1)` — current game's result excluded from its own features
-2. Team quality stats joined from prior season only (season N-1 -> season N games)
+2. Team quality stats joined from prior season only (season N-1 → season N games)
 3. Roster quality aggregated from prior season only
 4. Temporal split prevents future season information in training data
 
@@ -161,10 +131,10 @@ Inspired by Karpathy's [autoresearch](https://github.com/karpathy/autoresearch) 
 
 - Team names: always use 3-letter codes (LAL, BOS, GSW). `team_mapping.py` normalizes all variants.
 - Missing values: XGBoost handles natively (learns optimal split direction)
-- Game winner: raw XGBoost logistic output (isotonic calibration was dropped — it overfits val)
+- Game winner: raw XGBoost logistic output (isotonic calibration dropped — overfits val)
 - Win totals: regression-to-mean shrinkage (s=0.33) with optional Ridge residual correction
 - MVP: XGB+Ridge blend (w=0.65, alpha=0.1) for Spearman 0.9111
 - Point spread: Huber loss XGB + Ridge blend (65/35)
-- Player models: per-target hyperparams and per-target feature exclusions (e.g., REB excludes scoring interactions)
-- Model artifacts: `.joblib` dicts containing model + feature_cols + any calibrators
+- Player models: per-target hyperparams and per-target feature exclusions (REB excludes scoring interactions)
+- Model artifacts: `.joblib` dicts containing model + feature_cols + any calibrators/scalers
 - Predict scripts use `model.get_booster().feature_names` for per-target feature alignment

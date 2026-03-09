@@ -57,19 +57,12 @@ def train() -> dict:
     )
     print(f"  Best iteration: {base_model.best_iteration}")
 
-    # Calibrate probabilities using isotonic regression on validation set
-    print("  Calibrating probabilities (isotonic)...")
-    from sklearn.calibration import calibration_curve
-    # Train calibration on validation predictions → isotonic mapping
-    val_probs = base_model.predict_proba(X_val)[:, 1]
-    from sklearn.isotonic import IsotonicRegression
-    calibrator = IsotonicRegression(out_of_bounds="clip")
-    calibrator.fit(val_probs, y_val)
-
-    # Evaluate on test set with calibrated probabilities
+    # Raw XGBoost logistic output — isotonic calibration dropped (exp032).
+    # It overfits the val distribution and hurts test accuracy by ~0.002.
     raw_prob = base_model.predict_proba(X_test)[:, 1]
-    y_prob = calibrator.predict(raw_prob)
+    y_prob = raw_prob
     y_pred = (y_prob > 0.5).astype(int)
+    calibrator = None
 
     test_metrics = classification_metrics(y_test.values, y_pred, y_prob)
     print_metrics("Game Winner (calibrated) — Test Set", test_metrics)

@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "WebFetch",
+      "WebSearch",
+
+      "Bash(python scripts/*)",
+      "Bash(python autoresearch/evaluate.py)",
+      "Bash(python -m pytest *)",
+      "Bash(python -c *)",
+      "Bash(pip install *)",
+      "Bash(pip freeze *)",
+      "Bash(pip list *)",
+      "Bash(git *)",
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(column *)",
+      "Bash(sort *)",
+      "Bash(cut *)",
+      "Bash(chmod *)",
+      "Bash(mkdir *)",
+      "Bash(jupyter *)",
+      "Bash(bash .claude/skills/autoresearch/scripts/*)",
+
+      "Edit(autoresearch/experiment.py)",
+      "Edit(autoresearch/results.tsv)",
+      "Edit(autoresearch/program.md)",
+      "Edit(nba_predict/models/**)",
+      "Edit(scripts/**)",
+      "Edit(notebooks/**)",
+      "Edit(.claude/**)",
+      "Edit(docs/**)",
+      "Edit(README.md)",
+
+      "Write(autoresearch/experiment.py)",
+      "Write(autoresearch/results.tsv)",
+      "Write(autoresearch/outputs/**)",
+      "Write(nba_predict/models/**)",
+      "Write(scripts/**)",
+      "Write(notebooks/**)",
+      "Write(outputs/**)",
+      "Write(docs/**)",
+      "Write(.claude/**)",
+
+      "mcp__qmd__*",
+      "mcp__Neon__*"
+    ],
+    "deny": [
+      "Edit(nba_predict/config.py)",
+      "Edit(nba_predict/pipeline.py)",
+      "Edit(nba_predict/features/**)",
+      "Edit(nba_predict/data/**)",
+      "Edit(nba_predict/evaluation/**)",
+      "Edit(autoresearch/evaluate.py)",
+      "Edit(autoresearch/constants.py)",
+
+      "Write(nba_predict/config.py)",
+      "Write(nba_predict/pipeline.py)",
+      "Write(nba_predict/features/**)",
+      "Write(nba_predict/data/**)",
+      "Write(nba_predict/evaluation/**)",
+      "Write(autoresearch/evaluate.py)",
+      "Write(autoresearch/constants.py)",
+
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(secrets/**)",
+      "Bash(rm -rf *)",
+      "Bash(git push --force *)",
+      "Bash(git reset --hard *)"
+    ]
+  },
+  "env": {
+    "PYTHONDONTWRITEBYTECODE": "1"
+  }
+}

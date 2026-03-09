@@ -87,7 +87,7 @@ def generate_player_predictions():
     models = artifact["models"]
     feature_cols = artifact["feature_cols"]
 
-    from autoresearch.experiment import _build_player_dataset
+    from nba_predict.models.player_performance import _build_player_dataset
     df = _build_player_dataset()
     subset = df[df["season"].isin(TEST_SEASONS)].copy()
 
@@ -114,11 +114,11 @@ def generate_season_predictions():
     print("Generating season outcome predictions...")
     artifact = joblib.load(MODELS_DIR / "season_outcomes.joblib")
 
-    from autoresearch.experiment import (
+    from nba_predict.models.season_outcomes import (
         _build_win_totals_dataset, _get_win_totals_features,
         _build_mvp_dataset, _get_mvp_features,
+        _compute_championship_odds,
     )
-    from nba_predict.models.season_outcomes import _compute_championship_odds
 
     wt_df = _build_win_totals_dataset()
     wt_features = [c for c in _get_win_totals_features() if c in wt_df.columns]

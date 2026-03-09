@@ -17,7 +17,11 @@ Repeat forever until the user stops you:
    - If NBA_CORE improved: commit experiment.py, append `keep` row to results.tsv
    - If worse or equal: revert experiment.py, append `discard` row to results.tsv
 8. **Log**: Append TSV row with all metrics
-9. **Go to 1**
+9. **Promote** (on keep only): `python scripts/promote.py`
+   - Copies winning model artifacts to `outputs/models/`
+   - Regenerates prediction CSVs
+   - Syncs prediction data to `docs/data/` for the site
+10. **Go to 1**
 
 ## Rules
 
