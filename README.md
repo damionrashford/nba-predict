@@ -102,4 +102,12 @@ python -m pytest tests/ -v                                       # run tests
 
 ## Tech Stack
 
-Python 3.13 · XGBoost · scikit-learn · pandas · numpy · scipy · Optuna · matplotlib · seaborn · FastMCP · BeautifulSoup · cloudscraper
+| Category | Tools |
+|----------|-------|
+| Language | [Python 3.13](https://www.python.org/) |
+| ML | [XGBoost](https://xgboost.readthedocs.io/), [scikit-learn](https://scikit-learn.org/), [Optuna](https://optuna.org/) |
+| Data | [pandas](https://pandas.pydata.org/), [NumPy](https://numpy.org/), [SciPy](https://scipy.org/) |
+| Visualization | [matplotlib](https://matplotlib.org/), [seaborn](https://seaborn.pydata.org/) |
+| Scraping | [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/), [cloudscraper](https://github.com/VeNoMouS/cloudscraper) |
+| Agent | [FastMCP](https://github.com/jlowin/fastmcp) |
+| Testing | [pytest](https://docs.pytest.org/) |
