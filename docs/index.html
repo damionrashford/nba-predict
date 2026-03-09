@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -29,12 +30,16 @@
       --red-dim: rgba(239, 68, 68, 0.12);
       --yellow: #eab308;
       --yellow-dim: rgba(234, 179, 8, 0.12);
+      --cyan: #06b6d4;
+      --cyan-dim: rgba(6, 182, 212, 0.12);
+      --purple: #a855f7;
+      --purple-dim: rgba(168, 85, 247, 0.12);
+      --orange: #f97316;
       --radius: 12px;
       --radius-sm: 8px;
       --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --mono: 'JetBrains Mono', monospace;
       --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.25);
-      --shadow-lg: 0 4px 12px rgba(0,0,0,0.5), 0 16px 48px rgba(0,0,0,0.35);
       --transition: 150ms ease;
     }
 
@@ -49,488 +54,221 @@
       min-height: 100vh;
     }
 
-    /* ---- NAV ---- */
+    /* NAV */
     nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      position: sticky; top: 0; z-index: 100;
       background: rgba(10, 10, 15, 0.85);
       backdrop-filter: blur(16px) saturate(1.4);
       border-bottom: 1px solid var(--border);
     }
     .nav-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 24px;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      max-width: 1200px; margin: 0 auto; padding: 0 24px;
+      height: 56px; display: flex; align-items: center; justify-content: space-between;
     }
     .nav-brand {
-      font-weight: 800;
-      font-size: 18px;
-      letter-spacing: -0.5px;
-      color: var(--text);
-      text-decoration: none;
+      font-weight: 800; font-size: 18px; letter-spacing: -0.5px;
+      color: var(--text); text-decoration: none;
     }
     .nav-brand span { color: var(--accent); }
-    .nav-links {
-      display: flex;
-      gap: 4px;
-      list-style: none;
-    }
+    .nav-links { display: flex; gap: 4px; list-style: none; }
     .nav-links a {
-      color: var(--text-secondary);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-      padding: 6px 12px;
-      border-radius: 6px;
+      color: var(--text-secondary); text-decoration: none; font-size: 13px;
+      font-weight: 500; padding: 6px 12px; border-radius: 6px;
       transition: color var(--transition), background var(--transition);
     }
-    .nav-links a:hover {
-      color: var(--text);
-      background: var(--bg-card);
-    }
+    .nav-links a:hover { color: var(--text); background: var(--bg-card); }
     .nav-gh {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--text-secondary);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-      padding: 6px 14px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      transition: all var(--transition);
+      display: flex; align-items: center; gap: 6px;
+      color: var(--text-secondary); text-decoration: none; font-size: 13px;
+      font-weight: 500; padding: 6px 14px; border: 1px solid var(--border);
+      border-radius: 6px; transition: all var(--transition);
     }
-    .nav-gh:hover {
-      color: var(--text);
-      border-color: var(--border-hover);
-      background: var(--bg-card);
-    }
+    .nav-gh:hover { color: var(--text); border-color: var(--border-hover); background: var(--bg-card); }
 
-    /* ---- LAYOUT ---- */
+    /* LAYOUT */
     .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-
     section { padding: 64px 0; }
     section + section { border-top: 1px solid var(--border); }
-
     .section-label {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: var(--accent);
-      margin-bottom: 8px;
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 1.5px; color: var(--accent); margin-bottom: 8px;
     }
-    .section-title {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      margin-bottom: 8px;
-    }
-    .section-desc {
-      color: var(--text-secondary);
-      font-size: 15px;
-      max-width: 600px;
-      margin-bottom: 32px;
-    }
+    .section-title { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .section-desc { color: var(--text-secondary); font-size: 15px; max-width: 600px; margin-bottom: 32px; }
 
-    /* ---- HERO ---- */
-    .hero {
-      padding: 80px 0 64px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
+    /* HERO */
+    .hero { padding: 80px 0 64px; text-align: center; position: relative; overflow: hidden; }
     .hero::before {
-      content: '';
-      position: absolute;
-      top: -120px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 600px;
-      height: 400px;
+      content: ''; position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 400px;
       background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
       pointer-events: none;
     }
     .hero-title {
-      font-size: clamp(36px, 5vw, 56px);
-      font-weight: 800;
-      letter-spacing: -1.5px;
-      line-height: 1.1;
-      margin-bottom: 16px;
-      position: relative;
+      font-size: clamp(36px, 5vw, 56px); font-weight: 800;
+      letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 16px; position: relative;
     }
     .hero-sub {
-      font-size: 17px;
-      color: var(--text-secondary);
-      max-width: 640px;
-      margin: 0 auto 40px;
-      line-height: 1.7;
+      font-size: 17px; color: var(--text-secondary); max-width: 640px;
+      margin: 0 auto 40px; line-height: 1.7;
     }
 
-    /* ---- METRIC CARDS ---- */
-    .metric-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
-    }
+    /* METRIC CARDS */
+    .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
     .metric-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      text-align: center;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; text-align: center;
       transition: border-color var(--transition), transform var(--transition);
     }
-    .metric-card:hover {
-      border-color: var(--border-hover);
-      transform: translateY(-1px);
-    }
-    .metric-value {
-      font-size: 28px;
-      font-weight: 800;
-      font-family: var(--mono);
-      letter-spacing: -1px;
-    }
-    .metric-label {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-top: 4px;
-      font-weight: 500;
-    }
+    .metric-card:hover { border-color: var(--border-hover); transform: translateY(-1px); }
+    .metric-value { font-size: 28px; font-weight: 800; font-family: var(--mono); letter-spacing: -1px; }
+    .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
     .metric-badge {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 4px;
-      margin-top: 8px;
+      display: inline-block; font-size: 11px; font-weight: 600;
+      padding: 2px 8px; border-radius: 4px; margin-top: 8px;
     }
     .badge-green { background: var(--green-dim); color: var(--green); }
     .badge-yellow { background: var(--yellow-dim); color: var(--yellow); }
 
-    /* ---- MODEL CARDS ---- */
-    .model-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 16px;
+    /* CHART GRID */
+    .chart-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .chart-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
+      transition: border-color var(--transition);
     }
+    .chart-card:hover { border-color: var(--border-hover); }
+    .chart-card h3 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .chart-card .chart-subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+    .chart-card canvas { width: 100% !important; }
+    .chart-card.wide { grid-column: 1 / -1; }
+
+    /* MODEL CARDS */
+    .model-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
     .model-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px;
       transition: border-color var(--transition), box-shadow var(--transition);
     }
-    .model-card:hover {
-      border-color: var(--border-hover);
-      box-shadow: var(--shadow);
-    }
-    .model-card h3 {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-    .model-card .model-type {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-weight: 500;
-      margin-bottom: 16px;
-    }
+    .model-card:hover { border-color: var(--border-hover); box-shadow: var(--shadow); }
+    .model-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .model-card .model-type { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-bottom: 16px; }
     .model-stat {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      border-top: 1px solid var(--border);
-      font-size: 13px;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-top: 1px solid var(--border); font-size: 13px;
     }
     .model-stat-label { color: var(--text-secondary); }
     .model-stat-value { font-weight: 600; font-family: var(--mono); font-size: 14px; }
     .model-algo {
-      margin-top: 12px;
-      font-size: 12px;
-      color: var(--text-muted);
-      font-family: var(--mono);
-      background: var(--bg);
-      padding: 6px 10px;
-      border-radius: 6px;
+      margin-top: 12px; font-size: 12px; color: var(--text-muted);
+      font-family: var(--mono); background: var(--bg); padding: 6px 10px; border-radius: 6px;
     }
 
-    /* ---- FEATURE IMPORTANCE ---- */
-    .feature-bar-list { list-style: none; }
-    .feature-bar-item {
-      display: grid;
-      grid-template-columns: 24px 1fr 200px 60px;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-    }
-    .feature-bar-item:last-child { border-bottom: none; }
-    .feature-rank {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-align: center;
-    }
-    .feature-name {
-      font-family: var(--mono);
-      font-size: 13px;
-      font-weight: 500;
-    }
-    .feature-bar-track {
-      height: 6px;
-      background: var(--bg);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-    .feature-bar-fill {
-      height: 100%;
-      background: var(--accent);
-      border-radius: 3px;
-      transition: width 600ms ease;
-    }
-    .feature-importance {
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--text-secondary);
-      text-align: right;
-    }
-
-    /* ---- TABS ---- */
-    .tabs {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 24px;
-      border-bottom: 1px solid var(--border);
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-    }
+    /* TABS */
+    .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 1px solid var(--border); overflow-x: auto; }
     .tab-btn {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-family: var(--font);
-      font-size: 13px;
-      font-weight: 600;
-      padding: 10px 16px;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      white-space: nowrap;
+      background: none; border: none; color: var(--text-muted); font-family: var(--font);
+      font-size: 13px; font-weight: 600; padding: 10px 16px; cursor: pointer;
+      border-bottom: 2px solid transparent; white-space: nowrap;
       transition: color var(--transition), border-color var(--transition);
     }
     .tab-btn:hover { color: var(--text-secondary); }
-    .tab-btn.active {
-      color: var(--text);
-      border-bottom-color: var(--accent);
-    }
+    .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
-    /* ---- TABLE ---- */
+    /* TABLE */
     .table-wrapper {
-      overflow-x: auto;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--bg-card);
+      overflow-x: auto; border: 1px solid var(--border);
+      border-radius: var(--radius); background: var(--bg-card);
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    thead {
-      position: sticky;
-      top: 0;
-      z-index: 2;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { position: sticky; top: 0; z-index: 2; }
     th {
-      background: var(--bg);
-      font-weight: 600;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-secondary);
-      padding: 12px 16px;
-      text-align: left;
-      white-space: nowrap;
-      border-bottom: 1px solid var(--border);
-      cursor: pointer;
-      user-select: none;
-      transition: color var(--transition);
+      background: var(--bg); font-weight: 600; font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.5px; color: var(--text-secondary); padding: 12px 16px;
+      text-align: left; white-space: nowrap; border-bottom: 1px solid var(--border);
+      cursor: pointer; user-select: none; transition: color var(--transition);
     }
     th:hover { color: var(--text); }
     th .sort-icon { font-size: 10px; margin-left: 4px; opacity: 0.4; }
     th.sorted .sort-icon { opacity: 1; color: var(--accent); }
     td {
-      padding: 10px 16px;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-      font-family: var(--mono);
-      font-size: 12.5px;
+      padding: 10px 16px; border-bottom: 1px solid var(--border);
+      white-space: nowrap; font-family: var(--mono); font-size: 12.5px;
     }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: rgba(255,255,255,0.015); }
     td.text-cell { font-family: var(--font); font-weight: 500; }
     td.correct-true { color: var(--green); }
     td.correct-false { color: var(--red); }
-    .table-count {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 12px;
-      text-align: right;
-    }
+    .table-count { font-size: 12px; color: var(--text-muted); margin-top: 12px; text-align: right; }
 
-    /* ---- SEARCH / FILTERS ---- */
-    .filters {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
+    /* FILTERS */
+    .filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
     .filter-input {
-      background: var(--bg-input);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text);
-      font-family: var(--font);
-      font-size: 13px;
-      padding: 8px 14px;
-      outline: none;
-      transition: border-color var(--transition), box-shadow var(--transition);
-      min-width: 200px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); color: var(--text); font-family: var(--font);
+      font-size: 13px; padding: 8px 14px; outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition); min-width: 200px;
     }
     .filter-input::placeholder { color: var(--text-muted); }
-    .filter-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
-    }
+    .filter-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
     select.filter-input {
-      cursor: pointer;
-      appearance: none;
+      cursor: pointer; appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2388889f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      padding-right: 32px;
+      background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
     }
 
-    /* ---- EXPERIMENT LOG ---- */
+    /* ANTI-LEAK */
+    .leak-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+    .leak-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; }
+    .leak-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .leak-card p { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+    .leak-icon {
+      width: 28px; height: 28px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; flex-shrink: 0;
+    }
+
+    /* EXPERIMENT TIMELINE */
     .exp-timeline { position: relative; padding-left: 24px; }
     .exp-timeline::before {
-      content: '';
-      position: absolute;
-      left: 7px;
-      top: 4px;
-      bottom: 4px;
-      width: 2px;
-      background: var(--border);
+      content: ''; position: absolute; left: 7px; top: 4px; bottom: 4px;
+      width: 2px; background: var(--border);
     }
-    .exp-item {
-      position: relative;
-      padding: 12px 0 12px 20px;
-    }
+    .exp-item { position: relative; padding: 12px 0 12px 20px; }
     .exp-item::before {
-      content: '';
-      position: absolute;
-      left: -20px;
-      top: 18px;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--border);
-      border: 2px solid var(--bg);
+      content: ''; position: absolute; left: -20px; top: 18px;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--border); border: 2px solid var(--bg);
     }
     .exp-item:last-child::before { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
     .exp-name { font-weight: 600; font-size: 14px; }
-    .exp-meta {
-      display: flex;
-      gap: 16px;
-      font-size: 12px;
-      color: var(--text-secondary);
-      font-family: var(--mono);
-      margin-top: 2px;
-    }
+    .exp-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text-secondary); font-family: var(--mono); margin-top: 2px; }
     .exp-change { color: var(--green); }
 
-    /* ---- ANTI-LEAK ---- */
-    .leak-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 16px;
-    }
-    .leak-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-    }
-    .leak-card h4 {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .leak-card p {
-      font-size: 13px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-    }
-    .leak-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
-    /* ---- TECH PILLS ---- */
-    .tech-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
+    /* TECH PILLS */
+    .tech-pills { display: flex; flex-wrap: wrap; gap: 8px; }
     .tech-pill {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 500;
+      background: var(--bg-card); border: 1px solid var(--border);
+      padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500;
       transition: border-color var(--transition);
     }
     .tech-pill:hover { border-color: var(--border-hover); }
 
-    /* ---- FOOTER ---- */
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 32px 0;
-      text-align: center;
-      font-size: 13px;
-      color: var(--text-muted);
-    }
+    /* FOOTER */
+    footer { border-top: 1px solid var(--border); padding: 32px 0; text-align: center; font-size: 13px; color: var(--text-muted); }
     footer a { color: var(--text-secondary); text-decoration: none; }
     footer a:hover { color: var(--text); }
 
-    /* ---- RESPONSIVE ---- */
+    /* RESPONSIVE */
     @media (max-width: 768px) {
       .hero { padding: 48px 0 40px; }
       section { padding: 40px 0; }
       .metric-grid { grid-template-columns: repeat(2, 1fr); }
       .model-grid { grid-template-columns: 1fr; }
-      .feature-bar-item { grid-template-columns: 24px 1fr 100px 50px; }
+      .chart-grid { grid-template-columns: 1fr; }
       .nav-links { display: none; }
       .filters { flex-direction: column; }
       .filter-input { min-width: unset; width: 100%; }
@@ -544,15 +282,14 @@
 </head>
 <body>
 
-<!-- NAV -->
 <nav>
   <div class="nav-inner">
     <a href="#" class="nav-brand">NBA<span>Predict</span></a>
     <ul class="nav-links">
       <li><a href="#results">Results</a></li>
+      <li><a href="#charts">Charts</a></li>
       <li><a href="#models">Models</a></li>
       <li><a href="#predictions">Predictions</a></li>
-      <li><a href="#features">Features</a></li>
       <li><a href="#experiments">Experiments</a></li>
     </ul>
     <a href="https://github.com/damionrashford/nba-predict" target="_blank" rel="noopener" class="nav-gh">
@@ -567,7 +304,6 @@
   <div class="container">
     <h1 class="hero-title">NBA Game & Player<br>Predictions</h1>
     <p class="hero-sub">XGBoost models trained on 26 seasons of Basketball Reference data. 200 engineered features, strict anti-leakage, and an autonomous experiment loop.</p>
-
     <div class="metric-grid" style="max-width: 900px; margin: 0 auto;">
       <div class="metric-card">
         <div class="metric-value">66.1%</div>
@@ -596,24 +332,15 @@
   </div>
 </section>
 
-<!-- RESULTS -->
+<!-- RESULTS TABLE -->
 <section id="results">
   <div class="container">
     <div class="section-label">Evaluation</div>
     <h2 class="section-title">Test Set Results</h2>
-    <p class="section-desc">All metrics evaluated on held-out 2024-2025 seasons, never seen during training or tuning.</p>
-
+    <p class="section-desc">All metrics on held-out 2024-2025 seasons, never seen during training or tuning.</p>
     <div class="table-wrapper">
       <table>
-        <thead>
-          <tr>
-            <th>Model</th>
-            <th>Metric</th>
-            <th>Score</th>
-            <th>Baseline</th>
-            <th>Improvement</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Model</th><th>Metric</th><th>Score</th><th>Baseline</th><th>Improvement</th></tr></thead>
         <tbody>
           <tr><td class="text-cell">Game Winner</td><td class="text-cell">Accuracy</td><td>66.1%</td><td>54.4%</td><td class="correct-true">+11.7 pp</td></tr>
           <tr><td class="text-cell">Game Winner</td><td class="text-cell">AUC-ROC</td><td>0.719</td><td>-</td><td>-</td></tr>
@@ -629,13 +356,79 @@
   </div>
 </section>
 
+<!-- CHARTS -->
+<section id="charts">
+  <div class="container">
+    <div class="section-label">Visualizations</div>
+    <h2 class="section-title">Model Performance</h2>
+    <p class="section-desc">Visual analysis of predictions across all four models.</p>
+
+    <div class="chart-grid">
+      <!-- 1. Model vs Baseline -->
+      <div class="chart-card">
+        <h3>Model vs Baseline</h3>
+        <div class="chart-subtitle">Improvement over naive baselines across all targets</div>
+        <canvas id="chart-baseline" height="280"></canvas>
+      </div>
+
+      <!-- 2. Calibration -->
+      <div class="chart-card">
+        <h3>Game Winner Calibration</h3>
+        <div class="chart-subtitle">Predicted win probability vs actual win rate (10 bins)</div>
+        <canvas id="chart-calibration" height="280"></canvas>
+      </div>
+
+      <!-- 3. Spread: Predicted vs Actual -->
+      <div class="chart-card">
+        <h3>Point Spread: Predicted vs Actual</h3>
+        <div class="chart-subtitle">Each dot is one game. Closer to diagonal = better</div>
+        <canvas id="chart-spread" height="280"></canvas>
+      </div>
+
+      <!-- 4. Win Prob Distribution -->
+      <div class="chart-card">
+        <h3>Win Probability Distribution</h3>
+        <div class="chart-subtitle">How confident is the model? Histogram of predicted probabilities</div>
+        <canvas id="chart-prob-dist" height="280"></canvas>
+      </div>
+
+      <!-- 5. Player Predictions -->
+      <div class="chart-card">
+        <h3>Player PTS: Predicted vs Actual</h3>
+        <div class="chart-subtitle">Next-season scoring predictions for 729 players</div>
+        <canvas id="chart-player-pts" height="280"></canvas>
+      </div>
+
+      <!-- 6. MVP Award Share -->
+      <div class="chart-card">
+        <h3>MVP Award Share: Predicted vs Actual</h3>
+        <div class="chart-subtitle">Spearman correlation = 0.911</div>
+        <canvas id="chart-mvp" height="280"></canvas>
+      </div>
+
+      <!-- 7. Feature Importance -->
+      <div class="chart-card">
+        <h3>Top 10 Features: Game Winner</h3>
+        <div class="chart-subtitle">XGBoost feature importance (gain)</div>
+        <canvas id="chart-features" height="280"></canvas>
+      </div>
+
+      <!-- 8. NBA_CORE Progression -->
+      <div class="chart-card">
+        <h3>NBA_CORE Over 33 Experiments</h3>
+        <div class="chart-subtitle">Autonomous experiment loop improvement trajectory</div>
+        <canvas id="chart-nbacore" height="280"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- MODELS -->
 <section id="models">
   <div class="container">
     <div class="section-label">Architecture</div>
     <h2 class="section-title">4 Models</h2>
     <p class="section-desc">Each model targets a different prediction task with its own feature set and algorithm.</p>
-
     <div class="model-grid">
       <div class="model-card">
         <h3>Game Winner</h3>
@@ -646,7 +439,6 @@
         <div class="model-stat"><span class="model-stat-label">Top Feature</span><span class="model-stat-value" style="font-size:11px">diff_win_pct_season</span></div>
         <div class="model-algo">XGBClassifier &middot; 200 features</div>
       </div>
-
       <div class="model-card">
         <h3>Point Spread</h3>
         <div class="model-type">Regression</div>
@@ -656,7 +448,6 @@
         <div class="model-stat"><span class="model-stat-label">Loss</span><span class="model-stat-value" style="font-size:12px">Huber</span></div>
         <div class="model-algo">XGB + Ridge blend (65/35)</div>
       </div>
-
       <div class="model-card">
         <h3>Player Performance</h3>
         <div class="model-type">Multi-target Regression</div>
@@ -666,7 +457,6 @@
         <div class="model-stat"><span class="model-stat-label">Players</span><span class="model-stat-value">729</span></div>
         <div class="model-algo">3x XGBRegressor &middot; per-target features</div>
       </div>
-
       <div class="model-card">
         <h3>Season Outcomes</h3>
         <div class="model-type">Win Totals + MVP</div>
@@ -685,7 +475,7 @@
   <div class="container">
     <div class="section-label">Explorer</div>
     <h2 class="section-title">Browse Predictions</h2>
-    <p class="section-desc">Interactive tables of all model predictions on the test set. Filter, search, and sort.</p>
+    <p class="section-desc">Interactive tables of all model predictions. Filter, search, and sort.</p>
 
     <div class="tabs" role="tablist">
       <button class="tab-btn active" data-tab="tab-games" role="tab">Game Winners</button>
@@ -696,188 +486,115 @@
       <button class="tab-btn" data-tab="tab-mvp" role="tab">MVP Race</button>
     </div>
 
-    <!-- GAME WINNERS -->
     <div class="tab-panel active" id="tab-games">
       <div class="filters">
         <input type="text" class="filter-input" id="games-search" placeholder="Search team (e.g. LAL, BOS)...">
-        <select class="filter-input" id="games-season">
-          <option value="">All Seasons</option>
-          <option value="2024">2023-24</option>
-          <option value="2025">2024-25</option>
-        </select>
-        <select class="filter-input" id="games-correct">
-          <option value="">All Results</option>
-          <option value="True">Correct</option>
-          <option value="False">Incorrect</option>
-        </select>
+        <select class="filter-input" id="games-season"><option value="">All Seasons</option><option value="2024">2023-24</option><option value="2025">2024-25</option></select>
+        <select class="filter-input" id="games-correct"><option value="">All Results</option><option value="True">Correct</option><option value="False">Incorrect</option></select>
       </div>
-      <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
-        <table id="games-table">
-          <thead>
-            <tr>
-              <th data-sort="date">Date <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="team_home">Home <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="team_away">Away <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="home_win_prob">Win Prob <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="predicted_winner">Pick <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="correct">Correct <span class="sort-icon">&#9650;</span></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="table-wrapper" style="max-height:500px;overflow-y:auto;">
+        <table id="games-table"><thead><tr>
+          <th data-sort="date">Date <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="team_home">Home <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="team_away">Away <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="home_win_prob">Win Prob <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="predicted_winner">Pick <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="correct">Correct <span class="sort-icon">&#9650;</span></th>
+        </tr></thead><tbody></tbody></table>
       </div>
       <div class="table-count" id="games-count"></div>
     </div>
 
-    <!-- POINT SPREADS -->
     <div class="tab-panel" id="tab-spreads">
       <div class="filters">
         <input type="text" class="filter-input" id="spreads-search" placeholder="Search team...">
-        <select class="filter-input" id="spreads-season">
-          <option value="">All Seasons</option>
-          <option value="2024">2023-24</option>
-          <option value="2025">2024-25</option>
-        </select>
+        <select class="filter-input" id="spreads-season"><option value="">All Seasons</option><option value="2024">2023-24</option><option value="2025">2024-25</option></select>
       </div>
-      <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
-        <table id="spreads-table">
-          <thead>
-            <tr>
-              <th data-sort="date">Date <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="team_home">Home <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="team_away">Away <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="pred_spread">Pred Spread <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="margin">Actual Margin <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="error">Error <span class="sort-icon">&#9650;</span></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="table-wrapper" style="max-height:500px;overflow-y:auto;">
+        <table id="spreads-table"><thead><tr>
+          <th data-sort="date">Date <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="team_home">Home <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="team_away">Away <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="pred_spread">Pred Spread <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="margin">Actual Margin <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="error">Error <span class="sort-icon">&#9650;</span></th>
+        </tr></thead><tbody></tbody></table>
       </div>
       <div class="table-count" id="spreads-count"></div>
     </div>
 
-    <!-- PLAYERS -->
     <div class="tab-panel" id="tab-players">
       <div class="filters">
         <input type="text" class="filter-input" id="players-search" placeholder="Search player or team...">
       </div>
-      <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
-        <table id="players-table">
-          <thead>
-            <tr>
-              <th data-sort="player">Player <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="team">Team <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="age">Age <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="pts_per_g">Actual PTS <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="pred_pts">Pred PTS <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="ast_per_g">Actual AST <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="pred_ast">Pred AST <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="trb_per_g">Actual REB <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="pred_reb">Pred REB <span class="sort-icon">&#9650;</span></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="table-wrapper" style="max-height:500px;overflow-y:auto;">
+        <table id="players-table"><thead><tr>
+          <th data-sort="player">Player <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="team">Team <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="age">Age <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="pts_per_g">Actual PTS <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="pred_pts">Pred PTS <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="ast_per_g">Actual AST <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="pred_ast">Pred AST <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="trb_per_g">Actual REB <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="pred_reb">Pred REB <span class="sort-icon">&#9650;</span></th>
+        </tr></thead><tbody></tbody></table>
       </div>
       <div class="table-count" id="players-count"></div>
     </div>
 
-    <!-- WIN TOTALS -->
     <div class="tab-panel" id="tab-wins">
       <div class="filters">
         <input type="text" class="filter-input" id="wins-search" placeholder="Search team...">
-        <select class="filter-input" id="wins-season">
-          <option value="">All Seasons</option>
-          <option value="2024">2023-24</option>
-          <option value="2025">2024-25</option>
-        </select>
+        <select class="filter-input" id="wins-season"><option value="">All Seasons</option><option value="2024">2023-24</option><option value="2025">2024-25</option></select>
       </div>
-      <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
-        <table id="wins-table">
-          <thead>
-            <tr>
-              <th data-sort="team">Team <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="season">Season <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="actual_wins">Actual Wins <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="pred_wins">Pred Wins <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="error">Error <span class="sort-icon">&#9650;</span></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="table-wrapper" style="max-height:500px;overflow-y:auto;">
+        <table id="wins-table"><thead><tr>
+          <th data-sort="team">Team <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="season">Season <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="actual_wins">Actual Wins <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="pred_wins">Pred Wins <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="error">Error <span class="sort-icon">&#9650;</span></th>
+        </tr></thead><tbody></tbody></table>
       </div>
       <div class="table-count" id="wins-count"></div>
     </div>
 
-    <!-- CHAMPIONSHIP ODDS -->
     <div class="tab-panel" id="tab-champs">
       <div class="filters">
         <input type="text" class="filter-input" id="champs-search" placeholder="Search team...">
-        <select class="filter-input" id="champs-season">
-          <option value="">All Seasons</option>
-          <option value="2024">2023-24</option>
-          <option value="2025">2024-25</option>
-        </select>
+        <select class="filter-input" id="champs-season"><option value="">All Seasons</option><option value="2024">2023-24</option><option value="2025">2024-25</option></select>
       </div>
-      <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
-        <table id="champs-table">
-          <thead>
-            <tr>
-              <th data-sort="championship_rank">Rank <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="team">Team <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="season">Season <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="pred_wins">Pred Wins <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="championship_prob">Champ Prob <span class="sort-icon">&#9650;</span></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="table-wrapper" style="max-height:500px;overflow-y:auto;">
+        <table id="champs-table"><thead><tr>
+          <th data-sort="championship_rank">Rank <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="team">Team <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="season">Season <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="pred_wins">Pred Wins <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="championship_prob">Champ Prob <span class="sort-icon">&#9650;</span></th>
+        </tr></thead><tbody></tbody></table>
       </div>
       <div class="table-count" id="champs-count"></div>
     </div>
 
-    <!-- MVP RACE -->
     <div class="tab-panel" id="tab-mvp">
       <div class="filters">
         <input type="text" class="filter-input" id="mvp-search" placeholder="Search player or team...">
-        <select class="filter-input" id="mvp-season">
-          <option value="">All Seasons</option>
-          <option value="2024">2023-24</option>
-          <option value="2025">2024-25</option>
-        </select>
+        <select class="filter-input" id="mvp-season"><option value="">All Seasons</option><option value="2024">2023-24</option><option value="2025">2024-25</option></select>
       </div>
-      <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
-        <table id="mvp-table">
-          <thead>
-            <tr>
-              <th data-sort="player">Player <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="team">Team <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="season">Season <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="pts_per_g">PPG <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="per">PER <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="bpm">BPM <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="actual_award_share">Actual Share <span class="sort-icon">&#9650;</span></th>
-              <th data-sort="pred_award_share">Pred Share <span class="sort-icon">&#9650;</span></th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="table-wrapper" style="max-height:500px;overflow-y:auto;">
+        <table id="mvp-table"><thead><tr>
+          <th data-sort="player">Player <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="team">Team <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="season">Season <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="pts_per_g">PPG <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="per">PER <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="bpm">BPM <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="actual_award_share">Actual Share <span class="sort-icon">&#9650;</span></th>
+          <th data-sort="pred_award_share">Pred Share <span class="sort-icon">&#9650;</span></th>
+        </tr></thead><tbody></tbody></table>
       </div>
       <div class="table-count" id="mvp-count"></div>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURE IMPORTANCE -->
-<section id="features">
-  <div class="container">
-    <div class="section-label">Feature Engineering</div>
-    <h2 class="section-title">Top Predictors</h2>
-    <p class="section-desc">Top 10 features by importance for the game winner model. Differential features dominate.</p>
-
-    <div style="max-width: 700px;">
-      <ul class="feature-bar-list" id="feature-bars"></ul>
     </div>
   </div>
 </section>
@@ -888,19 +605,18 @@
     <div class="section-label">Methodology</div>
     <h2 class="section-title">Anti-Leakage Design</h2>
     <p class="section-desc">Three layers prevent future information from contaminating predictions.</p>
-
     <div class="leak-grid">
       <div class="leak-card">
-        <h4><span class="leak-icon" style="background: var(--green-dim); color: var(--green);">1</span> Shifted Rolling Features</h4>
-        <p>All rolling stats use <code style="font-family:var(--mono);background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px">.shift(1)</code> so the current game's outcome is never included in its own features. A 10-game average at game N uses games 1 through N-1.</p>
+        <h4><span class="leak-icon" style="background:var(--green-dim);color:var(--green);">1</span> Shifted Rolling Features</h4>
+        <p>All rolling stats use <code style="font-family:var(--mono);background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px">.shift(1)</code> so the current game's outcome is never included in its own features.</p>
       </div>
       <div class="leak-card">
-        <h4><span class="leak-icon" style="background: var(--accent-glow); color: var(--accent);">2</span> Prior-Season Joins</h4>
-        <p>Team quality stats (SRS, Off Rtg, Def Rtg) are joined from season N-1 to predict season N games. No in-season aggregate team stats leak into game-level predictions.</p>
+        <h4><span class="leak-icon" style="background:var(--accent-glow);color:var(--accent);">2</span> Prior-Season Joins</h4>
+        <p>Team quality stats (SRS, Off Rtg, Def Rtg) joined from season N-1 to predict season N. No in-season stats leak.</p>
       </div>
       <div class="leak-card">
-        <h4><span class="leak-icon" style="background: var(--yellow-dim); color: var(--yellow);">3</span> Temporal Split</h4>
-        <p>Train on 2001-2021, tune on 2022-2023, test on 2024-2025. No future season data ever touches training. Live 2026 season used for active predictions only.</p>
+        <h4><span class="leak-icon" style="background:var(--yellow-dim);color:var(--yellow);">3</span> Temporal Split</h4>
+        <p>Train 2001-2021, tune 2022-2023, test 2024-2025. No future data ever touches training.</p>
       </div>
     </div>
   </div>
@@ -912,36 +628,14 @@
     <div class="section-label">AutoResearch</div>
     <h2 class="section-title">Experiment History</h2>
     <p class="section-desc">33 autonomous experiments. An LLM agent modified experiment.py, evaluated against NBA_CORE, and kept improvements.</p>
-
     <div class="exp-timeline" style="max-width: 600px;">
-      <div class="exp-item">
-        <div class="exp-name">Baseline</div>
-        <div class="exp-meta"><span>NBA_CORE: 0.2254</span></div>
-      </div>
-      <div class="exp-item">
-        <div class="exp-name">Win totals regression-to-mean shrinkage</div>
-        <div class="exp-meta"><span>0.2281</span><span class="exp-change">+0.0027</span></div>
-      </div>
-      <div class="exp-item">
-        <div class="exp-name">Point spread Huber loss + Ridge blend</div>
-        <div class="exp-meta"><span>0.2312</span><span class="exp-change">+0.0031</span></div>
-      </div>
-      <div class="exp-item">
-        <div class="exp-name">Player interaction features</div>
-        <div class="exp-meta"><span>0.2322</span><span class="exp-change">+0.0010</span></div>
-      </div>
-      <div class="exp-item">
-        <div class="exp-name">Per-season win total shrinkage</div>
-        <div class="exp-meta"><span>0.2337</span><span class="exp-change">+0.0015</span></div>
-      </div>
-      <div class="exp-item">
-        <div class="exp-name">MVP XGB + Ridge blend</div>
-        <div class="exp-meta"><span>0.2371</span><span class="exp-change">+0.0034</span></div>
-      </div>
-      <div class="exp-item">
-        <div class="exp-name">Drop isotonic calibration</div>
-        <div class="exp-meta"><span>0.2380</span><span class="exp-change">+0.0009</span></div>
-      </div>
+      <div class="exp-item"><div class="exp-name">Baseline</div><div class="exp-meta"><span>NBA_CORE: 0.2254</span></div></div>
+      <div class="exp-item"><div class="exp-name">Win totals regression-to-mean shrinkage</div><div class="exp-meta"><span>0.2281</span><span class="exp-change">+0.0027</span></div></div>
+      <div class="exp-item"><div class="exp-name">Point spread Huber loss + Ridge blend</div><div class="exp-meta"><span>0.2312</span><span class="exp-change">+0.0031</span></div></div>
+      <div class="exp-item"><div class="exp-name">Player interaction features</div><div class="exp-meta"><span>0.2322</span><span class="exp-change">+0.0010</span></div></div>
+      <div class="exp-item"><div class="exp-name">Per-season win total shrinkage</div><div class="exp-meta"><span>0.2337</span><span class="exp-change">+0.0015</span></div></div>
+      <div class="exp-item"><div class="exp-name">MVP XGB + Ridge blend</div><div class="exp-meta"><span>0.2371</span><span class="exp-change">+0.0034</span></div></div>
+      <div class="exp-item"><div class="exp-name">Drop isotonic calibration</div><div class="exp-meta"><span>0.2380</span><span class="exp-change">+0.0009</span></div></div>
     </div>
   </div>
 </section>
@@ -975,7 +669,7 @@
 </footer>
 
 <script>
-// ---- CSV DATA (embedded) ----
+// ---- DATA STORE ----
 const DATA = {};
 
 async function loadCSV(url, name) {
@@ -996,6 +690,388 @@ async function loadCSV(url, name) {
     console.warn('Could not load', name, e);
     DATA[name] = { headers: [], rows: [] };
   }
+}
+
+// ---- CHART DEFAULTS ----
+Chart.defaults.color = '#8888a0';
+Chart.defaults.borderColor = '#1e1e2e';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.legend.labels.padding = 16;
+Chart.defaults.plugins.tooltip.backgroundColor = '#1a1a26';
+Chart.defaults.plugins.tooltip.borderColor = '#2a2a3e';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+Chart.defaults.plugins.tooltip.cornerRadius = 8;
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.titleFont = { family: "'Inter', sans-serif", size: 12, weight: 600 };
+Chart.defaults.plugins.tooltip.bodyFont = { family: "'JetBrains Mono', monospace", size: 11 };
+Chart.defaults.elements.point.radius = 2.5;
+Chart.defaults.elements.point.hoverRadius = 5;
+
+// ---- BUILD CHARTS ----
+function buildCharts() {
+  // 1. Model vs Baseline (horizontal bar)
+  new Chart(document.getElementById('chart-baseline'), {
+    type: 'bar',
+    data: {
+      labels: ['Game Winner (Acc)', 'Spread (MAE)', 'PTS (MAE)', 'AST (MAE)', 'REB (MAE)', 'Win Totals (MAE)'],
+      datasets: [
+        { label: 'Model', data: [66.1, 10.94, 2.25, 0.66, 0.77, 8.61], backgroundColor: 'rgba(99,102,241,0.7)', borderRadius: 4 },
+        { label: 'Baseline', data: [54.4, 12.56, 2.48, 0.73, 0.80, 8.80], backgroundColor: 'rgba(85,85,106,0.4)', borderRadius: 4 },
+      ]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { grid: { color: 'rgba(30,30,46,0.5)' } },
+        y: { grid: { display: false } },
+      }
+    }
+  });
+
+  // 2. Calibration — built from game data
+  buildCalibrationChart();
+
+  // 3. Spread scatter — built from spread data
+  buildSpreadChart();
+
+  // 4. Win prob distribution — built from game data
+  buildProbDistChart();
+
+  // 5. Player PTS scatter — built from player data
+  buildPlayerPtsChart();
+
+  // 6. MVP scatter — built from mvp data
+  buildMvpChart();
+
+  // 7. Feature importance (horizontal bar)
+  const feats = [
+    { name: 'diff_win_pct_season', val: 0.1057 },
+    { name: 'diff_margin_avg_last20', val: 0.0447 },
+    { name: 'diff_roster_total_vorp', val: 0.0236 },
+    { name: 'diff_roster_depth_bpm', val: 0.0123 },
+    { name: 'diff_roster_top5_bpm', val: 0.0107 },
+    { name: 'diff_margin_avg_last10', val: 0.0104 },
+    { name: 'away_game_num', val: 0.0080 },
+    { name: 'diff_win_pct_last20', val: 0.0079 },
+    { name: 'away_rest_days', val: 0.0076 },
+    { name: 'home_margin_avg_last20', val: 0.0072 },
+  ];
+  new Chart(document.getElementById('chart-features'), {
+    type: 'bar',
+    data: {
+      labels: feats.map(f => f.name),
+      datasets: [{
+        data: feats.map(f => f.val),
+        backgroundColor: feats.map((_, i) => i === 0 ? 'rgba(99,102,241,0.8)' : 'rgba(99,102,241,0.4)'),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(30,30,46,0.5)' }, title: { display: true, text: 'Importance (gain)', color: '#55556a' } },
+        y: { grid: { display: false }, ticks: { font: { family: "'JetBrains Mono', monospace", size: 10 } } },
+      }
+    }
+  });
+
+  // 8. NBA_CORE progression
+  const expData = [
+    { exp: 'Baseline', score: 0.2254 },
+    { exp: 'exp005', score: 0.2281 },
+    { exp: 'exp008', score: 0.2299 },
+    { exp: 'exp011', score: 0.2312 },
+    { exp: 'exp012', score: 0.2322 },
+    { exp: 'exp013', score: 0.2323 },
+    { exp: 'exp025', score: 0.2337 },
+    { exp: 'exp026', score: 0.2340 },
+    { exp: 'exp027', score: 0.2344 },
+    { exp: 'exp029', score: 0.2371 },
+    { exp: 'exp032', score: 0.2380 },
+  ];
+  new Chart(document.getElementById('chart-nbacore'), {
+    type: 'line',
+    data: {
+      labels: expData.map(e => e.exp),
+      datasets: [{
+        label: 'NBA_CORE',
+        data: expData.map(e => e.score),
+        borderColor: '#6366f1',
+        backgroundColor: 'rgba(99,102,241,0.1)',
+        fill: true,
+        tension: 0.3,
+        pointBackgroundColor: expData.map((e, i) => i === expData.length - 1 ? '#22c55e' : '#6366f1'),
+        pointRadius: expData.map((_, i) => i === expData.length - 1 ? 6 : 3),
+        pointBorderWidth: expData.map((_, i) => i === expData.length - 1 ? 2 : 0),
+        pointBorderColor: '#0a0a0f',
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(30,30,46,0.5)' }, ticks: { font: { size: 9 } } },
+        y: {
+          grid: { color: 'rgba(30,30,46,0.5)' },
+          min: 0.220, max: 0.245,
+          ticks: { callback: v => v.toFixed(3) },
+        }
+      }
+    }
+  });
+}
+
+// ---- DATA-DRIVEN CHARTS ----
+
+function buildCalibrationChart() {
+  const games = DATA.games;
+  if (!games || !games.rows.length) return;
+
+  const bins = Array.from({ length: 10 }, () => ({ count: 0, wins: 0 }));
+  games.rows.forEach(r => {
+    const prob = parseFloat(r.home_win_prob);
+    const win = parseInt(r.home_win);
+    if (isNaN(prob) || isNaN(win)) return;
+    const idx = Math.min(Math.floor(prob * 10), 9);
+    bins[idx].count++;
+    bins[idx].wins += win;
+  });
+
+  const labels = bins.map((_, i) => `${(i*10)}-${(i+1)*10}%`);
+  const actual = bins.map(b => b.count > 0 ? (b.wins / b.count * 100) : null);
+  const ideal = [5, 15, 25, 35, 45, 55, 65, 75, 85, 95];
+
+  new Chart(document.getElementById('chart-calibration'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Model',
+          data: actual,
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99,102,241,0.15)',
+          pointBackgroundColor: '#6366f1',
+          pointRadius: 4,
+          tension: 0.2,
+        },
+        {
+          label: 'Perfect Calibration',
+          data: ideal,
+          borderColor: '#55556a',
+          borderDash: [6, 4],
+          pointRadius: 0,
+          tension: 0,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { grid: { color: 'rgba(30,30,46,0.5)' }, title: { display: true, text: 'Predicted Probability Bin', color: '#55556a' } },
+        y: { grid: { color: 'rgba(30,30,46,0.5)' }, title: { display: true, text: 'Actual Win Rate %', color: '#55556a' }, min: 0, max: 100 },
+      }
+    }
+  });
+}
+
+function buildSpreadChart() {
+  const spreads = DATA.spreads;
+  if (!spreads || !spreads.rows.length) return;
+
+  // Sample for performance (max 600 points)
+  const step = Math.max(1, Math.floor(spreads.rows.length / 600));
+  const points = [];
+  for (let i = 0; i < spreads.rows.length; i += step) {
+    const r = spreads.rows[i];
+    const pred = parseFloat(r.pred_spread);
+    const actual = parseFloat(r.margin);
+    if (!isNaN(pred) && !isNaN(actual)) points.push({ x: pred, y: actual });
+  }
+
+  new Chart(document.getElementById('chart-spread'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Games',
+          data: points,
+          backgroundColor: 'rgba(99,102,241,0.35)',
+          pointRadius: 2.5,
+        },
+        {
+          label: 'Perfect',
+          data: [{ x: -30, y: -30 }, { x: 30, y: 30 }],
+          type: 'line',
+          borderColor: '#55556a',
+          borderDash: [6, 4],
+          pointRadius: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { grid: { color: 'rgba(30,30,46,0.5)' }, title: { display: true, text: 'Predicted Spread', color: '#55556a' }, min: -30, max: 30 },
+        y: { grid: { color: 'rgba(30,30,46,0.5)' }, title: { display: true, text: 'Actual Margin', color: '#55556a' }, min: -50, max: 50 },
+      }
+    }
+  });
+}
+
+function buildProbDistChart() {
+  const games = DATA.games;
+  if (!games || !games.rows.length) return;
+
+  const bins = Array.from({ length: 20 }, () => 0);
+  games.rows.forEach(r => {
+    const prob = parseFloat(r.home_win_prob);
+    if (isNaN(prob)) return;
+    const idx = Math.min(Math.floor(prob * 20), 19);
+    bins[idx]++;
+  });
+
+  const labels = bins.map((_, i) => `${(i*5)}%`);
+
+  new Chart(document.getElementById('chart-prob-dist'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Games',
+        data: bins,
+        backgroundColor: bins.map((_, i) => {
+          if (i < 8) return 'rgba(239,68,68,0.4)';
+          if (i < 12) return 'rgba(234,179,8,0.4)';
+          return 'rgba(34,197,94,0.4)';
+        }),
+        borderRadius: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, title: { display: true, text: 'Home Win Probability', color: '#55556a' } },
+        y: { grid: { color: 'rgba(30,30,46,0.5)' }, title: { display: true, text: 'Count', color: '#55556a' } },
+      }
+    }
+  });
+}
+
+function buildPlayerPtsChart() {
+  const players = DATA.players;
+  if (!players || !players.rows.length) return;
+
+  const points = [];
+  players.rows.forEach(r => {
+    const actual = parseFloat(r.pts_per_g);
+    const pred = parseFloat(r.pred_pts);
+    if (!isNaN(actual) && !isNaN(pred)) points.push({ x: actual, y: pred });
+  });
+
+  new Chart(document.getElementById('chart-player-pts'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Players',
+          data: points,
+          backgroundColor: 'rgba(6,182,212,0.4)',
+          pointRadius: 2.5,
+        },
+        {
+          label: 'Perfect',
+          data: [{ x: 0, y: 0 }, { x: 35, y: 35 }],
+          type: 'line',
+          borderColor: '#55556a',
+          borderDash: [6, 4],
+          pointRadius: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { grid: { color: 'rgba(30,30,46,0.5)' }, title: { display: true, text: 'Actual PTS/G', color: '#55556a' }, min: 0, max: 35 },
+        y: { grid: { color: 'rgba(30,30,46,0.5)' }, title: { display: true, text: 'Predicted PTS/G', color: '#55556a' }, min: 0, max: 35 },
+      }
+    }
+  });
+}
+
+function buildMvpChart() {
+  const mvp = DATA.mvp;
+  if (!mvp || !mvp.rows.length) return;
+
+  const points = [];
+  const labels = [];
+  mvp.rows.forEach(r => {
+    const actual = parseFloat(r.actual_award_share);
+    const pred = parseFloat(r.pred_award_share);
+    if (!isNaN(actual) && !isNaN(pred)) {
+      points.push({ x: actual, y: pred });
+      labels.push(r.player);
+    }
+  });
+
+  new Chart(document.getElementById('chart-mvp'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Players',
+          data: points,
+          backgroundColor: points.map(p => p.x > 0.3 ? 'rgba(234,179,8,0.8)' : 'rgba(168,85,247,0.4)'),
+          pointRadius: points.map(p => p.x > 0.3 ? 5 : 2.5),
+        },
+        {
+          label: 'Perfect',
+          data: [{ x: 0, y: 0 }, { x: 1, y: 1 }],
+          type: 'line',
+          borderColor: '#55556a',
+          borderDash: [6, 4],
+          pointRadius: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              if (ctx.datasetIndex === 1) return '';
+              const i = ctx.dataIndex;
+              return `${labels[i]}: actual=${ctx.parsed.x.toFixed(3)}, pred=${ctx.parsed.y.toFixed(3)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: 'rgba(30,30,46,0.5)' }, title: { display: true, text: 'Actual Award Share', color: '#55556a' }, min: 0, max: 1 },
+        y: { grid: { color: 'rgba(30,30,46,0.5)' }, title: { display: true, text: 'Predicted Award Share', color: '#55556a' }, min: 0, max: 1 },
+      }
+    }
+  });
 }
 
 // ---- TABS ----
@@ -1039,16 +1115,12 @@ document.querySelectorAll('th[data-sort]').forEach(th => {
     const prev = sortState[tableId];
     const asc = prev && prev.col === col ? !prev.asc : false;
     sortState[tableId] = { col, asc };
-
     tableEl.querySelectorAll('th').forEach(h => h.classList.remove('sorted'));
     th.classList.add('sorted');
     th.querySelector('.sort-icon').textContent = asc ? '\u25B2' : '\u25BC';
-
-    // re-filter triggers sort
-    const event = new Event('input');
     const panel = th.closest('.tab-panel');
     const searchInput = panel.querySelector('.filter-input');
-    if (searchInput) searchInput.dispatchEvent(event);
+    if (searchInput) searchInput.dispatchEvent(new Event('input'));
   });
 });
 
@@ -1065,7 +1137,7 @@ function applySorting(rows, tableId) {
   return sorted;
 }
 
-// ---- FILTER LOGIC ----
+// ---- FILTERS ----
 function setupFilter(dataKey, tableId, countId, columns, filterFn, formatters) {
   const panel = document.getElementById(tableId.replace('-table', ''));
   if (!panel) return;
@@ -1078,43 +1150,14 @@ function setupFilter(dataKey, tableId, countId, columns, filterFn, formatters) {
     renderTable(tableId, filtered, columns, formatters);
     updateCount(countId, filtered.length, d.rows.length);
   };
-  inputs.forEach(inp => inp.addEventListener('input', run));
-  inputs.forEach(inp => inp.addEventListener('change', run));
-  // initial
+  inputs.forEach(inp => { inp.addEventListener('input', run); inp.addEventListener('change', run); });
   setTimeout(run, 100);
-}
-
-// ---- FEATURE BARS ----
-const TOP_FEATURES = [
-  { name: 'diff_win_pct_season', importance: 0.1057 },
-  { name: 'diff_margin_avg_last20', importance: 0.0447 },
-  { name: 'diff_roster_total_vorp', importance: 0.0236 },
-  { name: 'diff_roster_depth_bpm', importance: 0.0123 },
-  { name: 'diff_roster_top5_bpm', importance: 0.0107 },
-  { name: 'diff_margin_avg_last10', importance: 0.0104 },
-  { name: 'away_game_num', importance: 0.0080 },
-  { name: 'diff_win_pct_last20', importance: 0.0079 },
-  { name: 'away_rest_days', importance: 0.0076 },
-  { name: 'home_margin_avg_last20', importance: 0.0072 },
-];
-function renderFeatures() {
-  const max = TOP_FEATURES[0].importance;
-  const ul = document.getElementById('feature-bars');
-  ul.innerHTML = TOP_FEATURES.map((f, i) => `
-    <li class="feature-bar-item">
-      <span class="feature-rank">${i + 1}</span>
-      <span class="feature-name">${f.name}</span>
-      <div class="feature-bar-track"><div class="feature-bar-fill" style="width:${(f.importance / max * 100).toFixed(1)}%"></div></div>
-      <span class="feature-importance">${f.importance.toFixed(4)}</span>
-    </li>
-  `).join('');
 }
 
 // ---- INIT ----
 async function init() {
   const base = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? '../outputs/predictions/'
-    : 'data/';
+    ? '../outputs/predictions/' : 'data/';
 
   await Promise.all([
     loadCSV(base + 'game_winner_predictions.csv', 'games'),
@@ -1125,12 +1168,9 @@ async function init() {
     loadCSV(base + 'mvp_race_predictions.csv', 'mvp'),
   ]);
 
-  // add computed columns
-  if (DATA.spreads) {
-    DATA.spreads.rows.forEach(r => {
-      r.error = Math.abs(parseFloat(r.pred_spread) - parseFloat(r.margin)).toFixed(1);
-    });
-  }
+  if (DATA.spreads) DATA.spreads.rows.forEach(r => { r.error = Math.abs(parseFloat(r.pred_spread) - parseFloat(r.margin)).toFixed(1); });
+
+  buildCharts();
 
   // Game Winners
   setupFilter('games', 'games-table', 'games-count',
@@ -1139,19 +1179,9 @@ async function init() {
       const q = document.getElementById('games-search').value.toUpperCase();
       const s = document.getElementById('games-season').value;
       const c = document.getElementById('games-correct').value;
-      return rows.filter(r =>
-        (!q || r.team_home.includes(q) || r.team_away.includes(q)) &&
-        (!s || r.season === s) &&
-        (!c || r.correct === c)
-      );
+      return rows.filter(r => (!q || r.team_home.includes(q) || r.team_away.includes(q)) && (!s || r.season === s) && (!c || r.correct === c));
     },
-    {
-      home_win_prob: v => 'text-cell',
-      correct: v => v === 'True' ? 'correct-true' : 'correct-false',
-      team_home: () => 'text-cell',
-      team_away: () => 'text-cell',
-      predicted_winner: () => 'text-cell',
-    }
+    { correct: v => v === 'True' ? 'correct-true' : 'correct-false', team_home: () => 'text-cell', team_away: () => 'text-cell', predicted_winner: () => 'text-cell' }
   );
 
   // Point Spreads
@@ -1160,10 +1190,7 @@ async function init() {
     rows => {
       const q = document.getElementById('spreads-search').value.toUpperCase();
       const s = document.getElementById('spreads-season').value;
-      return rows.filter(r =>
-        (!q || r.team_home.includes(q) || r.team_away.includes(q)) &&
-        (!s || r.season === s)
-      );
+      return rows.filter(r => (!q || r.team_home.includes(q) || r.team_away.includes(q)) && (!s || r.season === s));
     },
     { team_home: () => 'text-cell', team_away: () => 'text-cell' }
   );
@@ -1173,9 +1200,7 @@ async function init() {
     ['player', 'team', 'age', 'pts_per_g', 'pred_pts', 'ast_per_g', 'pred_ast', 'trb_per_g', 'pred_reb'],
     rows => {
       const q = document.getElementById('players-search').value.toUpperCase();
-      return rows.filter(r =>
-        !q || r.player.toUpperCase().includes(q) || r.team.includes(q)
-      );
+      return rows.filter(r => !q || r.player.toUpperCase().includes(q) || r.team.includes(q));
     },
     { player: () => 'text-cell', team: () => 'text-cell' }
   );
@@ -1186,10 +1211,7 @@ async function init() {
     rows => {
       const q = document.getElementById('wins-search').value.toUpperCase();
       const s = document.getElementById('wins-season').value;
-      return rows.filter(r =>
-        (!q || r.team.includes(q)) &&
-        (!s || r.season === s)
-      );
+      return rows.filter(r => (!q || r.team.includes(q)) && (!s || r.season === s));
     },
     { team: () => 'text-cell' }
   );
@@ -1200,10 +1222,7 @@ async function init() {
     rows => {
       const q = document.getElementById('champs-search').value.toUpperCase();
       const s = document.getElementById('champs-season').value;
-      return rows.filter(r =>
-        (!q || r.team.includes(q)) &&
-        (!s || r.season === s)
-      );
+      return rows.filter(r => (!q || r.team.includes(q)) && (!s || r.season === s));
     },
     { team: () => 'text-cell' }
   );
@@ -1214,15 +1233,10 @@ async function init() {
     rows => {
       const q = document.getElementById('mvp-search').value.toUpperCase();
       const s = document.getElementById('mvp-season').value;
-      return rows.filter(r =>
-        (!q || r.player.toUpperCase().includes(q) || r.team.includes(q)) &&
-        (!s || r.season === s)
-      );
+      return rows.filter(r => (!q || r.player.toUpperCase().includes(q) || r.team.includes(q)) && (!s || r.season === s));
     },
     { player: () => 'text-cell', team: () => 'text-cell' }
   );
-
-  renderFeatures();
 }
 
 init();
