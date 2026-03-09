@@ -4,6 +4,8 @@ Predict NBA game winners, point spreads, player stats, MVP races, and season win
 
 4 models | 200 features | 66.1% game winner accuracy | strict temporal anti-leakage | autonomous experiment loop ([Karpathy-style](https://github.com/karpathy/autoresearch))
 
+**[Live Demo](https://damionrashford.github.io/nba-predict/)** — interactive charts, model metrics, and browsable predictions
+
 ---
 
 ## Results
